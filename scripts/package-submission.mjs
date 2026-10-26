@@ -12,9 +12,9 @@ import { execFileSync } from 'node:child_process';
 const here = dirname(fileURLToPath(import.meta.url));
 const root = resolve(here, '..');
 const out = resolve(root, 'submission');
-const video = resolve(root, 'artifacts/video/walkthrough-narrated.mp4');
-const liveVideo = resolve(root, 'artifacts/video/walkthrough.mp4');
-const source = existsSync(video) ? video : liveVideo;
+const video = resolve(root, 'public/walkthrough.mp4');
+const videoFallback = resolve(root, 'docs/walkthrough.mp4');
+const source = existsSync(video) ? video : videoFallback;
 
 rmSync(out, { recursive: true, force: true });
 mkdirSync(resolve(out, 'docs/screens'), { recursive: true });
@@ -36,8 +36,7 @@ if (existsSync(source)) cpSync(source, resolve(out, 'docs/walkthrough.mp4'));
 // Source code (no node_modules, no build output, no local database).
 const codeOut = resolve(out, 'source');
 mkdirSync(codeOut, { recursive: true });
-const include = ['src', 'scripts', 'tests', 'migrations', 'public', 'docs'];
-for (const dir of include) {
+const include = ['src', 'scripts', 'tests', 'migrations', 'public', 'docs'];for (const dir of include) {
   const path = resolve(root, dir);
   if (existsSync(path)) cpSync(path, resolve(codeOut, dir), { recursive: true });
 }

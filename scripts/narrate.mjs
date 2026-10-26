@@ -37,9 +37,9 @@ if (!ffmpeg) {
   process.exit(1);
 }
 
-rmSync(clipsDir, { recursive: true, force: true });
+const prepare = process.argv.includes('--prepare');
+if (prepare) rmSync(clipsDir, { recursive: true, force: true });
 mkdirSync(clipsDir, { recursive: true });
-
 // 1. Synthesise one clip per beat (requests run concurrently).
 const durations = {};
 const CONCURRENCY = 6;
@@ -86,10 +86,23 @@ async function synthesise(beat) {
 }
 
 for (let index = 0; index < BEATS.length; index += CONCURRENCY) {
-  await Promise.all(BEATS.slice(index, index + CONCURRENCY).map(synthesise));
+  const batch = BEATS.slice(index, index + CONCURRENCY);
+  // `--prepare` refreshes every clip; the mix pass reuses what is already there.
+  await Promise.all(
+    batch.map((beat) => (prepare || !existsSync(resolve(clipsDir, `${beat.id}.mp3`)) ? synthesise(beat) : null)),
+  );
 }
 
 // Clip durations let the recorder pace the screen capture to the voice-over.
+for (const beat of BEATS) {
+  const clipPath = resolve(clipsDir, `${beat.id}.mp3`);
+  const seconds = ffprobe
+    ? execFileSync(ffprobe, ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', clipPath], {
+        encoding: 'utf8',
+      }).trim()
+    : '0';
+  durations[beat.id] = Math.round(Number(seconds) * 1000);
+}
 writeFileSync(resolve(artifacts, 'narration-durations.json'), JSON.stringify(durations, null, 2));
 console.log('clip durations written: artifacts/narration-durations.json');
 

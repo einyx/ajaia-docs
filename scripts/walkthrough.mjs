@@ -32,6 +32,7 @@ for (const file of existsSync(videoDir) ? readdirSync(videoDir) : []) {
   if (file.endsWith('.webm') || file.endsWith('.mp4')) rmSync(resolve(videoDir, file), { force: true });
 }
 mkdirSync(videoDir, { recursive: true });
+rmSync(shotsDir, { recursive: true, force: true });
 mkdirSync(shotsDir, { recursive: true });
 
 const markdownFixture = `# Imported Brief
