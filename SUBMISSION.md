@@ -14,7 +14,7 @@ assignment: one coherent slice of the Google Docs surface, deployed and reviewab
 | Architecture note | [`ARCHITECTURE.md`](ARCHITECTURE.md) |
 | AI workflow note | [`AI-WORKFLOW.md`](AI-WORKFLOW.md) |
 | Video URL (plain text) | `walkthrough-video-url.txt` |
-| Screenshots | `docs/screens/` (light and dark, 21 frames) |
+| Screenshots | `docs/screens/` (light and dark, 22 frames) |
 
 ### What the video covers
 
@@ -27,10 +27,11 @@ reviewer can find each one quickly:
 | Front end, API and database in one screenshot | Full-stack execution across frontend, backend, persistence |
 | Formatting stored as semantic HTML; autosave; reload proof | Persistence; editing experience within scope |
 | Inline formatting, Format menu, lists, quotes | Quality of the document editing experience |
+| Version history: every edit snapshotted, diff and restore | Depth beyond the brief; production-shaped editing |
 | File import: a `.md` file becomes a new editable document | Practical handling of file upload |
 | Sharing: editor vs viewer access; switch accounts; viewer read-only | Practical handling of sharing; access logic |
 | Dark mode / Apple HIG | Product and UI quality |
-| Export menu | Scope discipline |
+| Export menu — PDF, Markdown, plain text | Scope discipline |
 | Source, architecture note and AI workflow note in the repository | Code clarity, written communication, mature use of AI tools |
 
 
@@ -51,7 +52,7 @@ ajaia/
 ├── src/server/                Hono API, storage adapter, SQL repository, seeding, standalone server
 ├── src/shared/                types and constants shared by client and server
 ├── migrations/                D1 / SQLite schema (0001 init, 0003 version history)
-├── scripts/                   dev runner, walkthrough recorder, narration, packaging, diagram renderer
+├── scripts/                   dev runner, walkthrough recorder, narration, packaging, diagram renderer, PDF-export check
 ├── tests/                     vitest suites: API (18), save queue (5), diff (8) — 31 tests
 ├── deploy/k8s/                optional Kubernetes manifests (the container path)
 ├── Dockerfile                 portable path: one Node process serving the SPA and the API
@@ -108,8 +109,8 @@ Accounts (mocked auth, no passwords): `alessio@linux.com`, `maya@ajaia.dev`, `sa
   rate limiting, no audit log. The *authorisation* layer is real.
 - No real-time collaboration: last-write-wins, so two simultaneous editors can overwrite each
   other. No presence indicators.
-- No comments, no attachments, no PDF export; version history has no named versions and its
-  diff is word-level rather than character-level.
+- No comments, no attachments; version history has no named versions, and its diff is
+  word-level rather than character-level.
 - Import is limited to `.md`, `.txt` and `.docx`; `.docx` conversion is best-effort.
 - The share picker lists seeded accounts rather than a directory of real users.
 
@@ -136,6 +137,9 @@ Accounts (mocked auth, no passwords): `alessio@linux.com`, `maya@ajaia.dev`, `sa
 
 - `npm run typecheck` → clean.
 - `npm test` → 31/31 (auth, persistence, role matrix, validation, version history, save queue, diff) against the real app + SQL.
+- `npm run verify:pdf` → the print pipeline is checked end to end: chrome hidden in print
+  media, body prints black in light *and* dark mode, and the PDF the browser produces
+  contains the document text and no toolbar.
 - Live API checks against the deployed Worker (login, list, patch, share, forbidden paths).
 - Playwright end-to-end run of the full flow against the live URL; reload-persistence proof.
 - Screenshots reviewed by hand in both appearances — that is how a viewer-mode save bug was
