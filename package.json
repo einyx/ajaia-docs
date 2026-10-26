@@ -14,7 +14,11 @@
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "db:migrate:local": "wrangler d1 migrations apply ajaia --local",
-    "db:migrate:remote": "wrangler d1 migrations apply ajaia --remote"
+    "db:migrate:remote": "wrangler d1 migrations apply ajaia --remote",
+    "video:prepare": "node scripts/narrate.mjs --prepare",
+    "video:record": "node scripts/walkthrough.mjs",
+    "video:narrate": "node scripts/narrate.mjs",
+    "package": "node scripts/package-submission.mjs"
   },
   "dependencies": {
     "@phosphor-icons/react": "^2.1.10",

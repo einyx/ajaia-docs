@@ -64,6 +64,11 @@ app, and the server can enforce a byte-size limit without understanding the docu
 The editor schema is the real sanitizer — TipTap parses stored HTML against its own schema, so
 unknown nodes and marks are dropped on load.
 
+The schema is not duplicated in code: `src/server/schema.ts` reads every file in `migrations/`
+in order, so local dev and the test suite build exactly the tables `wrangler d1 migrations
+apply` creates. A migration added to that folder is picked up by both — there is no second
+copy of the schema to forget to update.
+
 ## 4. The access model (the part that carries the risk)
 
 One function decides everything:
@@ -98,6 +103,10 @@ viewer gets `403 read_only` rather than a silent success.
 - **Autosave**: content changes are queued and flushed 700 ms after the last keystroke; the
   queue is also flushed when the tab is hidden and before switching documents. The header shows
   `Saving… / Saved / Save failed` — failure is visible rather than silently swallowed.
+- **One save queue per document.** Pending edits are tracked by document id
+  (`src/client/lib/saveQueue.ts`), so a failed save is always retried against the document it
+  came from — never against whichever document the user happens to be looking at when the
+  retry fires.
 - **Optimistic concurrency was deliberately skipped.** Last-write-wins is acceptable for a
   demo; adding version checks without real-time sync would have added half a feature.
   It is the first thing I would add (see §8).
@@ -135,7 +144,7 @@ Apple's Human Interface Guidelines, implemented as CSS custom properties in
 | --- | --- | --- |
 | Types | `npm run typecheck` | clean |
 | Behaviour | `npm test` (vitest) | 22/22 — auth, persistence, role matrix, validation, version history |
-| API, live | `curl` against the deployed Worker | login → list → patch → share → forbidden paths |
+| API, live | `curl` against the deployed Worker | login → create → patch → read-back → share (editor + viewer) → editor writes but cannot delete or re-share → viewer gets `403 read_only` → owner-only revoke → versions list + restore → `413` over 1 MB |
 | UI, live | Playwright run of the real flow | sign-in → edit → autosave → import → share → switch user |
 | Persistence | reload the page mid-flow | content returns from D1 |
 | Design | screenshots reviewed at 1440×900, light and dark | — |

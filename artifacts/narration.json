@@ -1,62 +1,92 @@
 [
   {
-    "startMs": 2945,
-    "text": "This is Ajaia Docs, a lightweight collaborative document editor. Sign in is mocked with seeded accounts, so there are no passwords to remember."
+    "id": "slice",
+    "startMs": 1820,
+    "text": "The brief was open-ended, so the first decision was what not to build. I picked a single slice and took it all the way through: a document editor with real persistence, real access control, a real file import path, and a live deployment. Real time collaboration, comments and version history are deliberately out of scope, and the architecture note explains why."
   },
   {
-    "startMs": 9914,
-    "text": "Signed in as Alessio. The sidebar separates my documents from documents shared with me, and everything comes from a Cloudflare D1 database."
+    "id": "signin",
+    "startMs": 26672,
+    "text": "Signing in is mocked on purpose, with seeded accounts, so there are no passwords to remember and reviewers can go straight to the product. The authorisation layer underneath it is real."
   },
   {
-    "startMs": 14999,
-    "text": "Documents persist across reloads. Formatting is stored as semantic HTML, so bold, headings and lists survive a refresh."
+    "id": "stack",
+    "startMs": 40110,
+    "text": "This is the whole stack. A React and TipTap front end, a Hono API running on Cloudflare Workers, and a D1 database behind it. The same SQL runs locally against SQLite and in production against D1, so the code I tested is the code that shipped."
   },
   {
-    "startMs": 21039,
-    "text": "Inline formatting works from the toolbar or with keyboard shortcuts. I am typing bold, italic and underline now, and each change autosaves."
+    "id": "persistence",
+    "startMs": 59153,
+    "text": "Content is stored as semantic HTML rather than editor internals. A document therefore survives a reload, a schema change, and a reviewer who never opens the app. Autosave flushes seven hundred milliseconds after you stop typing, and again when the tab is hidden."
   },
   {
-    "startMs": 25421,
-    "text": "Text styles live behind a single Format menu, which is how Apple's own apps group them."
+    "id": "inline",
+    "startMs": 76317,
+    "text": "The editing experience is where depth mattered most. Bold, italic, underline, headings, lists, quotes, code blocks and links, with keyboard shortcuts throughout, in a toolbar that follows Apple Human Interface Guidelines."
   },
   {
-    "startMs": 30985,
-    "text": "Lists, quotes and code blocks are one click away, and the toolbar always reflects the current block type."
+    "id": "format-menu",
+    "startMs": 93036,
+    "text": "Text styles sit behind a single Format menu rather than three separate buttons, which is how Apple groups them, and the toolbar always reflects the current block type."
   },
   {
-    "startMs": 37848,
-    "text": "Creating a document takes one click. I rename it inline, type a line, and autosave persists it to the database."
+    "id": "blocks",
+    "startMs": 105607,
+    "text": "Lists, quotes and code blocks are one click away, and every change is persisted immediately, so nothing is ever lost to a refresh."
   },
   {
-    "startMs": 47941,
-    "text": "Here is the proof. I reload the page, and the content comes straight back from D1, because every edit was already saved."
+    "id": "new-doc",
+    "startMs": 115101,
+    "text": "Creating a document takes one click, renaming is inline, and the save state is always visible. Small details like these are what separate a tool that feels finished from one that merely works."
   },
   {
-    "startMs": 58293,
-    "text": "File import turns a markdown file into a new editable document. Parsing happens in the browser and the result is sanitised before it is stored."
+    "id": "reload",
+    "startMs": 128160,
+    "text": "Here is the persistence proof. I reload the page, and the content comes straight back from D1, because every keystroke was already saved."
   },
   {
-    "startMs": 67402,
-    "text": "Sharing is the core of the product. The owner invites a teammate by email and chooses either editor or viewer access."
+    "id": "import",
+    "startMs": 139029,
+    "text": "For file upload I chose import over attachment, because it lands the user directly in an editable document. Markdown, plain text and Word files are parsed in the browser, sanitised, and stored as an ordinary document you can keep editing."
   },
   {
-    "startMs": 78845,
-    "text": "Switching accounts shows the sharing model from the other side. Maya now sees the document under Shared with me."
+    "id": "share",
+    "startMs": 155285,
+    "text": "Sharing is the core of the product, so the model is explicit. One owner, and shared users who are either editors or viewers. The owner invites by email and can change or revoke access at any time."
   },
   {
-    "startMs": 84993,
-    "text": "Maya opens the shared document. Her role is Can edit, so she can change the content just like the owner."
+    "id": "shared",
+    "startMs": 168000,
+    "text": "From the other side, Maya now sees the document under Shared with me, with her role shown on the row."
   },
   {
-    "startMs": 98752,
-    "text": "The interface follows Apple's Human Interface Guidelines, including dark mode, which follows the system appearance setting."
+    "id": "maya",
+    "startMs": 172425,
+    "text": "Maya has edit access, so she can change the content. The permission is not a disabled button in the interface: the API checks the role on every single request."
   },
   {
-    "startMs": 109507,
-    "text": "Any document can be exported as Markdown or plain text from this menu."
+    "id": "viewer",
+    "startMs": 174718,
+    "text": "Sam's role is Can view. The editor is read-only for him, and if he tried to write, the API would reject it. The automated test suite asserts that entire permission matrix, owner, editor, viewer and non sharee."
   },
   {
-    "startMs": 116642,
-    "text": "That is the full walkthrough. The app is live on Cloudflare Workers, and the source, architecture notes and AI workflow notes are in the readme."
+    "id": "design",
+    "startMs": 181346,
+    "text": "The interface follows Apple Human Interface Guidelines throughout, including dark mode, which follows the system appearance, and it collapses the glass effects back to solid surfaces when the system asks for reduced transparency."
+  },
+  {
+    "id": "export",
+    "startMs": 187117,
+    "text": "Export is in this menu. The features I chose not to build, attachments, version history and PDF export, are listed in the architecture note along with the order I would build them in."
+  },
+  {
+    "id": "repo",
+    "startMs": 198633,
+    "text": "The source, the architecture note and the AI workflow note are all in the repository, and I am showing them here. The architecture note explains what I prioritised and the trade-offs I would defend. The AI workflow note lists the tools, what the AI genuinely sped up, and the generated output I rejected."
+  },
+  {
+    "id": "close",
+    "startMs": 218360,
+    "text": "That is the slice: a document editor that persists, shares and imports, deployed and reviewable in one command. The live URL, the video and all the notes are in the submission. Thank you."
   }
 ]

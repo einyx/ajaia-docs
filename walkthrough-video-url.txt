@@ -1,0 +1,12 @@
+https://ajaia-docs.alessio-2b5.workers.dev/walkthrough.mp4
+
+Backup copies of the same file:
+https://github.com/einyx/ajaia-docs/raw/main/docs/walkthrough.mp4
+https://raw.githubusercontent.com/einyx/ajaia-docs/main/docs/walkthrough.mp4
+
+Live app:            https://ajaia-docs.alessio-2b5.workers.dev
+Source + docs:      https://github.com/einyx/ajaia-docs
+
+Walkthrough video: ~2 minutes, recorded with Playwright against the live deployment,
+with on-screen captions. The voice-over script for a narrated cut is in
+scripts/narration-script.mjs (macOS `say` or OpenAI TTS — no key required).

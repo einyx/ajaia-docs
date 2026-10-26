@@ -226,7 +226,7 @@ body::before{
 }
 .page .hi{background:linear-gradient(180deg,transparent 58%, var(--peach) 58%)}
 
-.doodle-col{position:sticky; top:22px; padding-top:6px}
+.doodle-col{align-self:stretch; display:flex; flex-direction:column; justify-content:center}
 .doodle{width:100%; color:var(--plum)}
 .doodle-caption{
   font-family:var(--fd); font-size:12.5px; color:var(--plum-2); text-align:center; margin-top:8px; line-height:1.5;
@@ -238,16 +238,16 @@ body::before{
 
 /* ----------------------------------------------------------------- share */
 .scene{position:relative; background:linear-gradient(180deg,#FCEAC9,#F8DDB4); min-height:660px; overflow:hidden}
-.scene-app{display:grid; grid-template-columns:264px minmax(0,1fr); opacity:.9}
+.scene-app{position:absolute; inset:0; display:grid; grid-template-columns:264px minmax(0,1fr); opacity:.9}
 .scene-side{background:var(--lace); border-right:1px solid var(--line); padding:22px 16px}
 .scene-main{padding:20px 26px}
 .scene-top{display:flex; align-items:center; gap:10px; margin-bottom:16px}
-.scene-line{height:11px; border-radius:999px; background:var(--line-2)}
+.scene-line{height:11px; border-radius:999px; background:rgba(110,33,56,.16)}
 .scene-page{
   background:var(--paper); border:1px solid var(--line); border-radius:var(--r-card);
   padding:30px 34px; max-width:560px; box-shadow:var(--shadow);
 }
-.scrim{position:absolute; inset:0; background:rgba(42,16,35,.42)}
+.scrim{position:absolute; inset:0; background:rgba(110,33,56,.36)}
 .modal{
   position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
   width:min(560px, calc(100% - 48px)); padding:28px 28px 22px;
@@ -477,50 +477,50 @@ body::before{
           </article>
 
           <div class="doodle-col">
-            <svg class="doodle" viewBox="0 0 300 270" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-label="Hand-drawn desk doodle">
+            <svg class="doodle" viewBox="0 0 320 280" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-label="Hand-drawn desk doodle">
               <defs>
                 <pattern id="dots" width="7" height="7" patternUnits="userSpaceOnUse">
                   <circle cx="2" cy="2" r="1.15" fill="currentColor"/>
                 </pattern>
               </defs>
 
-              <!-- halftone wash -->
-              <path d="M22 104C14 66 46 26 90 22c40-4 62 30 56 68-6 38-40 66-78 62-30-3-44-20-46-48z" fill="url(#dots)" stroke="none" opacity=".45"/>
+              <!-- halftone wash behind the paper -->
+              <path d="M22 134C14 96 46 56 90 52c40-4 62 30 56 68-6 38-40 66-78 62-30-3-44-20-46-48z" fill="url(#dots)" stroke="none" opacity=".45"/>
 
               <!-- speech bubble -->
-              <path d="M206 26h72a16 16 0 0116 16v34a16 16 0 01-16 16h-40l-18 16v-16h-14a16 16 0 01-16-16V42a16 16 0 0116-16z" fill="var(--cream)"/>
-              <circle cx="232" cy="59" r="4.4" fill="var(--plum)" stroke="none"/>
-              <circle cx="252" cy="59" r="4.4" fill="var(--plum)" stroke="none"/>
-              <circle cx="272" cy="59" r="4.4" fill="var(--plum)" stroke="none"/>
+              <path d="M206 22h74a16 16 0 0116 16v30a16 16 0 01-16 16h-38l-20 16v-16h-16a16 16 0 01-16-16V38a16 16 0 0116-16z" fill="var(--cream)"/>
+              <circle cx="224" cy="53" r="4.4" fill="var(--plum)" stroke="none"/>
+              <circle cx="244" cy="53" r="4.4" fill="var(--plum)" stroke="none"/>
+              <circle cx="264" cy="53" r="4.4" fill="var(--plum)" stroke="none"/>
 
               <!-- paper -->
-              <g transform="rotate(-6 78 152)">
-                <rect x="26" y="82" width="106" height="146" rx="13" fill="var(--cream)"/>
-                <path d="M46 112h66M46 134h66M46 156h42"/>
-                <circle cx="58" cy="190" r="13" fill="var(--peach)"/>
-                <path d="M52 190l4.5 4.5L65 184" stroke-width="2.4"/>
-                <path d="M80 190h38"/>
+              <g transform="rotate(-6 74 118)">
+                <rect x="22" y="52" width="104" height="132" rx="13" fill="var(--cream)"/>
+                <path d="M42 82h64M42 104h64M42 126h40"/>
+                <circle cx="54" cy="160" r="13" fill="var(--peach)"/>
+                <path d="M48 160l4.5 4.5L61 154" stroke-width="2.4"/>
+                <path d="M76 160h36"/>
               </g>
 
               <!-- pencil -->
-              <path d="M142 246l14-18 84-84 16 16-84 84z" fill="var(--peach)"/>
-              <path d="M156 228l14 14-18 8z" fill="var(--cream)"/>
-              <path d="M240 144l16-16 16 16-16 16z" fill="var(--cream)"/>
-              <path d="M162 252l8-10" stroke-width="2.4"/>
+              <path d="M169 240.4L239.7 169.7L228.3 158.3L157.6 229z" fill="var(--peach)"/>
+              <path d="M239.7 169.7L252.4 157L241 145.6L228.3 158.3z" fill="var(--cream)"/>
+              <path d="M152 246L169 240.4L157.6 229z" fill="var(--cream)"/>
+              <path d="M152 246L157.7 244.1L153.9 240.3z" fill="var(--plum)" stroke="none"/>
 
               <!-- mug -->
-              <path d="M64 208h56v34a14 14 0 01-14 14H78a14 14 0 01-14-14z" fill="var(--cream)"/>
-              <path d="M120 216h12a13 13 0 010 26h-12" fill="var(--cream)"/>
-              <path d="M82 194c-7-8 7-13 0-22M100 194c-7-8 7-13 0-22"/>
+              <path d="M40 222h56v26a14 14 0 01-14 14H54a14 14 0 01-14-14z" fill="var(--cream)"/>
+              <path d="M96 230h12a13 13 0 010 26H96" fill="var(--cream)"/>
+              <path d="M58 214c-7-7 7-11 0-18M76 214c-7-7 7-11 0-18"/>
 
               <!-- plant -->
-              <path d="M238 214h44l-5 30a6 6 0 01-6 5h-22a6 6 0 01-6-5z" fill="var(--cream)"/>
-              <path d="M260 214c0-22-12-30-12-30M260 214c0-26 16-32 16-32M260 214c-2-14-2-30 2-42"/>
-              <path d="M236 182c-10-3-16-12-15-22 11-1 21 6 23 16M266 180c10-4 15-13 14-23-11 0-20 7-22 17"/>
+              <path d="M254 212h38l-4 34a6 6 0 01-6 5h-18a6 6 0 01-6-5z" fill="var(--cream)"/>
+              <path d="M273 212c0-14-8-20-8-20M273 212c0-18 11-22 11-22M273 212c-1-10-1-20 1-28"/>
+              <path d="M252 190c-9-3-13-11-12-19 9-1 16 5 18 13M286 188c9-3 12-11 11-19-9 0-15 6-17 14"/>
 
               <!-- sparkles -->
-              <path d="M156 62c1.5 8 3 9.5 11 11-8 1.5-9.5 3-11 11-1.5-8-3-9.5-11-11 8-1.5 9.5-3 11-11z"/>
-              <path d="M286 118c1 5.5 2 6.5 7.5 7.5-5.5 1-6.5 2-7.5 7.5-1-5.5-2-6.5-7.5-7.5 5.5-1 6.5-2 7.5-7.5z"/>
+              <path d="M150 44c1.5 8 3 9.5 11 11-8 1.5-9.5 3-11 11-1.5-8-3-9.5-11-11 8-1.5 9.5-3 11-11z"/>
+              <path d="M298 122c1 5.5 2 6.5 7.5 7.5-5.5 1-6.5 2-7.5 7.5-1-5.5-2-6.5-7.5-7.5 5.5-1 6.5-2 7.5-7.5z"/>
             </svg>
             <p class="doodle-caption">Drawn by hand, on purpose.<br>Nothing here was imported.</p>
           </div>
@@ -558,7 +558,7 @@ body::before{
             <div class="scene-line" style="width:60px"></div>
           </div>
           <div class="scene-page">
-            <div class="scene-line" style="width:45%;height:18px;background:var(--plum-3)"></div>
+            <div class="scene-line" style="width:45%;height:18px;background:rgba(110,33,56,.34)"></div>
             <div style="height:14px"></div>
             <div class="scene-line" style="width:100%"></div>
             <div class="scene-line" style="width:92%"></div>
