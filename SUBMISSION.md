@@ -9,7 +9,7 @@ assignment: one coherent slice of the Google Docs surface, deployed and reviewab
 | --- | --- |
 | **Live product** | <https://ajaia-docs.alessio-2b5.workers.dev> |
 | **Walkthrough video (3–5 min, narrated)** | <https://ajaia-docs.alessio-2b5.workers.dev/walkthrough.mp4> — also at `docs/walkthrough.mp4` in the source folder |
-| **Source code (public mirror)** | <https://github.com/einyx/ajaia-docs> |
+| **Source code (public mirror)** | <https://github.com/einyx/docs> |
 | Setup & run instructions | [`README.md`](README.md) |
 | Architecture note | [`ARCHITECTURE.md`](ARCHITECTURE.md) |
 | AI workflow note | [`AI-WORKFLOW.md`](AI-WORKFLOW.md) |

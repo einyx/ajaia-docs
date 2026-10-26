@@ -22,7 +22,7 @@ import { BEAT_BY_ID } from './narration-script.mjs';
 const here = dirname(fileURLToPath(import.meta.url));
 const root = resolve(here, '..');
 const base = process.argv[2] ?? 'https://ajaia-docs.alessio-2b5.workers.dev';
-const repo = process.env.GITHUB_REPO ?? 'https://github.com/einyx/ajaia-docs';
+const repo = process.env.GITHUB_REPO ?? 'https://github.com/einyx/docs';
 const artifacts = resolve(root, 'artifacts');
 const videoDir = resolve(artifacts, 'video');
 const shotsDir = resolve(artifacts, 'screens');
