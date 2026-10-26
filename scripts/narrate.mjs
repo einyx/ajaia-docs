@@ -39,13 +39,16 @@ if (!ffmpeg) {
 }
 
 const prepare = process.argv.includes('--prepare');
+// A recording is paced against the clips it was recorded with, so the mixer
+// uses the snapshot taken at record time — never a clip regenerated later.
+const usedClipsDir = resolve(videoDir, 'clips-used');
+const mixClipsDir = existsSync(usedClipsDir) ? usedClipsDir : clipsDir;
 mkdirSync(clipsDir, { recursive: true });
 
 // 1. Synthesise one clip per beat (requests run concurrently).
 const durations = {};
 const CONCURRENCY = 6;
 
-// Regenerate a clip only when it is missing or its text/model/voice changed.
 const hashPath = resolve(artifacts, 'narration-clips.json');
 const hashes = existsSync(hashPath) ? JSON.parse(readFileSync(hashPath, 'utf8')) : {};
 const hashOf = (beat) =>
@@ -93,23 +96,29 @@ async function synthesise(beat) {
   console.log(`clip ${beat.id}: ${(durations[beat.id] / 1000).toFixed(1)}s`);
 }
 
-for (let index = 0; index < BEATS.length; index += CONCURRENCY) {
-  const batch = BEATS.slice(index, index + CONCURRENCY);
-  await Promise.all(
-    batch.map((beat) => {
-      const clipPath = resolve(clipsDir, `${beat.id}.mp3`);
-      const hash = hashOf(beat);
-      nextHashes[beat.id] = hash;
-      const stale = !existsSync(clipPath) || hashes[beat.id] !== hash;
-      return stale ? synthesise(beat) : null;
-    }),
-  );
+if (prepare) {
+  for (let index = 0; index < BEATS.length; index += CONCURRENCY) {
+    const batch = BEATS.slice(index, index + CONCURRENCY);
+    await Promise.all(
+      batch.map((beat) => {
+        const clipPath = resolve(clipsDir, `${beat.id}.mp3`);
+        const hash = hashOf(beat);
+        nextHashes[beat.id] = hash;
+        const stale = !existsSync(clipPath) || hashes[beat.id] !== hash;
+        return stale ? synthesise(beat) : null;
+      }),
+    );
+  }
+  writeFileSync(hashPath, JSON.stringify(nextHashes, null, 2));
 }
-writeFileSync(hashPath, JSON.stringify(nextHashes, null, 2));
 
 // Clip durations let the recorder pace the screen capture to the voice-over.
 for (const beat of BEATS) {
-  const clipPath = resolve(clipsDir, `${beat.id}.mp3`);
+  const clipPath = resolve(mixClipsDir, `${beat.id}.mp3`);
+  if (!existsSync(clipPath)) {
+    console.error(`missing voice-over clip: ${beat.id} (run scripts/narrate.mjs --prepare)`);
+    process.exit(1);
+  }
   const seconds = ffprobe
     ? execFileSync(ffprobe, ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', clipPath], {
         encoding: 'utf8',
@@ -120,7 +129,7 @@ for (const beat of BEATS) {
 writeFileSync(resolve(artifacts, 'narration-durations.json'), JSON.stringify(durations, null, 2));
 console.log('clip durations written: artifacts/narration-durations.json');
 
-if (process.argv.includes('--prepare')) {
+if (prepare) {
   console.log('prepare pass done — clips are ready for the paced recording');
   process.exit(0);
 }
@@ -162,7 +171,7 @@ execFileSync(
   [
     '-y',
     '-i', videoPath,
-    ...timeline.flatMap((entry) => ['-i', resolve(clipsDir, `${entry.id}.mp3`)]),
+    ...timeline.flatMap((entry) => ['-i', resolve(mixClipsDir, `${entry.id}.mp3`)]),
     '-filter_complex', filter,
     '-map', '0:v',
     '-map', '[mixout]',

@@ -1,97 +1,97 @@
 [
   {
     "id": "slice",
-    "startMs": 1494,
+    "startMs": 1736,
     "text": "The brief was open-ended, so the first decision was what not to build. I picked a single slice and took it all the way through: a document editor with real persistence, real access control, a real file import path, and a live deployment. Real time collaboration, comments and version history are deliberately out of scope, and the architecture note explains why."
   },
   {
     "id": "signin",
-    "startMs": 25746,
+    "startMs": 25988,
     "text": "Signing in is mocked on purpose, with seeded accounts, so there are no passwords to remember and reviewers can go straight to the product. The authorisation layer underneath it is real."
   },
   {
     "id": "stack",
-    "startMs": 37361,
+    "startMs": 37635,
     "text": "This is the whole stack. A React and TipTap front end, a Hono API running on Cloudflare Workers, and a D1 database behind it. The same SQL runs locally against SQLite and in production against D1, so the code I tested is the code that shipped."
   },
   {
     "id": "persistence",
-    "startMs": 56526,
+    "startMs": 56820,
     "text": "Content is stored as semantic HTML rather than editor internals. A document therefore survives a reload, a schema change, and a reviewer who never opens the app. Autosave flushes seven hundred milliseconds after you stop typing, and again when the tab is hidden."
   },
   {
     "id": "inline",
-    "startMs": 76136,
+    "startMs": 76433,
     "text": "The editing experience is where depth mattered most. Bold, italic, underline, headings, lists, quotes, code blocks and links, with keyboard shortcuts throughout, in a toolbar that follows Apple Human Interface Guidelines."
   },
   {
     "id": "format-menu",
-    "startMs": 90538,
+    "startMs": 90847,
     "text": "Text styles sit behind a single Format menu rather than three separate buttons, which is how Apple groups them, and the toolbar always reflects the current block type."
   },
   {
     "id": "blocks",
-    "startMs": 101190,
+    "startMs": 101500,
     "text": "Lists, quotes and code blocks are one click away, and every change is persisted immediately, so nothing is ever lost to a refresh."
   },
   {
     "id": "history",
-    "startMs": 110172,
+    "startMs": 110479,
     "text": "One stretch goal made it in. Each edit is snapshotted, so the document keeps a short history showing what changed, when, and who changed it. Restoring a version is one click, and only the owner or an editor can do it."
   },
   {
     "id": "new-doc",
-    "startMs": 126437,
+    "startMs": 126746,
     "text": "Creating a document takes one click, renaming is inline, and the save state is always visible. Small details like these are what separate a tool that feels finished from one that merely works."
   },
   {
     "id": "reload",
-    "startMs": 139861,
+    "startMs": 140201,
     "text": "Here is the persistence proof. I reload the page, and the content comes straight back from D1, because every keystroke was already saved."
   },
   {
     "id": "import",
-    "startMs": 149624,
+    "startMs": 149967,
     "text": "For file upload I chose import over attachment, because it lands the user directly in an editable document. Markdown, plain text and Word files are parsed in the browser, sanitised, and stored as an ordinary document you can keep editing."
   },
   {
     "id": "share",
-    "startMs": 165478,
+    "startMs": 165817,
     "text": "Sharing is the core of the product, so the model is explicit. One owner, and shared users who are either editors or viewers. The owner invites by email and can change or revoke access at any time."
   },
   {
     "id": "shared",
-    "startMs": 179440,
+    "startMs": 179784,
     "text": "From the other side, Maya now sees the document under Shared with me, with her role shown on the row."
   },
   {
     "id": "maya",
-    "startMs": 186658,
+    "startMs": 187007,
     "text": "Maya has edit access, so she can change the content. The permission is not a disabled button in the interface: the API checks the role on every single request."
   },
   {
     "id": "viewer",
-    "startMs": 197572,
+    "startMs": 197927,
     "text": "Sam's role is Can view. The editor is read-only for him, and if he tried to write, the API would reject it. The automated test suite asserts that entire permission matrix, owner, editor, viewer and non sharee."
   },
   {
     "id": "design",
-    "startMs": 211993,
+    "startMs": 212349,
     "text": "The interface follows Apple Human Interface Guidelines throughout, including dark mode, which follows the system appearance, and it collapses the glass effects back to solid surfaces when the system asks for reduced transparency."
   },
   {
     "id": "export",
-    "startMs": 227109,
+    "startMs": 227466,
     "text": "Export is in this menu, as PDF through the browser print stylesheet, or as Markdown or plain text. The features I chose not to build, attachments and a character-level diff, are listed in the architecture note along with the order I would build them in."
   },
   {
     "id": "repo",
-    "startMs": 238767,
+    "startMs": 243182,
     "text": "The source, the architecture note and the AI workflow note are all in the repository, and I am showing them here. The architecture note explains what I prioritised and the trade-offs I would defend. The AI workflow note lists the tools, what the AI genuinely sped up, and the generated output I rejected."
   },
   {
     "id": "close",
-    "startMs": 258541,
+    "startMs": 262955,
     "text": "That is the slice: a document editor that persists, shares and imports, deployed and reviewable in one command. The live URL, the video and all the notes are in the submission. Thank you."
   }
 ]

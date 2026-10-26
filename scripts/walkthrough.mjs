@@ -13,7 +13,7 @@
  * length of the synthesised voice-over, so narration never overlaps itself.
  */
 import { chromium } from 'playwright';
-import { mkdirSync, rmSync, writeFileSync, readdirSync, readFileSync, existsSync } from 'node:fs';
+import { mkdirSync, rmSync, writeFileSync, readdirSync, readFileSync, cpSync, existsSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
@@ -359,6 +359,16 @@ if (overlap) {
   process.exit(1);
 }
 console.log('narration timeline is clean (no overlaps)');
+
+// Freeze the clips this recording was paced against, so a later re-synthesis
+// (edited script, new voice) can never be mixed into this video.
+const usedClips = resolve(videoDir, 'clips-used');
+rmSync(usedClips, { recursive: true, force: true });
+mkdirSync(usedClips, { recursive: true });
+for (const file of readdirSync(resolve(videoDir, 'clips'))) {
+  if (file.endsWith('.mp3')) cpSync(resolve(videoDir, 'clips', file), resolve(usedClips, file));
+}
+console.log(`voice-over frozen: artifacts/video/clips-used (${readdirSync(usedClips).length} clips)`);
 
 const ffmpeg = ['/opt/homebrew/bin/ffmpeg', '/usr/local/bin/ffmpeg'].find((bin) => existsSync(bin));
 if (ffmpeg) {
