@@ -12,10 +12,15 @@ data/
 .env
 .env.*
 
-# artifacts (large recordings; the narrated MP4 is committed under docs/)
-artifacts/video/*.webm
-artifacts/video/clips/
-artifacts/*.md
+# artifacts (raw recordings and generated clips; the reviewed copies live in docs/)
+artifacts/
 
 # os
 .DS_Store
+
+# generated static copy of the walkthrough video (see scripts/publish-video.mjs)
+public/walkthrough.mp4
+
+# generated submission bundle
+submission/
+ajaia-docs-submission.zip

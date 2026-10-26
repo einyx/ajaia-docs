@@ -29,8 +29,11 @@ export interface ShareEntry {
   createdAt: number;
 }
 
-export interface SessionPayload {
-  user: User;
+export interface VersionEntry {
+  id: number;
+  createdAt: number;
+  excerpt: string;
+  author: PublicUser | null;
 }
 
 export interface DocumentsResponse {

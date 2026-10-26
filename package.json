@@ -7,9 +7,10 @@
   "scripts": {
     "dev": "node scripts/dev.mjs",
     "dev:api": "node src/server/local.ts",
-    "build": "vite build",
+    "build": "node scripts/publish-video.mjs && vite build",
     "deploy": "npm run build && wrangler deploy",
     "preview": "npm run build && wrangler dev --port 8788",
+    "package": "node scripts/package-submission.mjs",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "db:migrate:local": "wrangler d1 migrations apply ajaia --local",

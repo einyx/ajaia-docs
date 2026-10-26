@@ -31,14 +31,25 @@ export interface DocumentWithOwner extends DocumentRow {
   owner_color: string;
 }
 
+export interface VersionRow {
+  id: number;
+  document_id: string;
+  user_id: number | null;
+  content: string;
+  excerpt: string;
+  created_at: number;
+}
+
+export interface VersionWithAuthor extends VersionRow {
+  name: string | null;
+  email: string | null;
+  color: string | null;
+}
+
 const USER_COLUMNS = 'id, email, name, color, created_at';
 
 export async function findUserByEmail(db: Db, email: string): Promise<UserRow | null> {
   return db.first<UserRow>(`SELECT ${USER_COLUMNS} FROM users WHERE email = ?`, [email.toLowerCase()]);
-}
-
-export async function findUserById(db: Db, id: number): Promise<UserRow | null> {
-  return db.first<UserRow>(`SELECT ${USER_COLUMNS} FROM users WHERE id = ?`, [id]);
 }
 
 export async function listUsers(db: Db): Promise<UserRow[]> {
@@ -109,12 +120,12 @@ export async function listShares(db: Db, documentId: string): Promise<(ShareRow 
 
 export async function createDocument(
   db: Db,
-  doc: { id: string; ownerId: number; title: string; content: string; plainText: string; now: number },
+  doc: { id: string; ownerId: number; title: string; content: string; plainText?: string; now: number },
 ): Promise<void> {
   await db.run(
     `INSERT INTO documents (id, owner_id, title, content, plain_text, created_at, updated_at)
      VALUES (?, ?, ?, ?, ?, ?, ?)`,
-    [doc.id, doc.ownerId, doc.title, doc.content, doc.plainText, doc.now, doc.now],
+    [doc.id, doc.ownerId, doc.title, doc.content, doc.plainText ?? '', doc.now, doc.now],
   );
 }
 
@@ -172,4 +183,53 @@ export async function deleteShare(db: Db, documentId: string, userId: number): P
 export async function countDocuments(db: Db, ownerId: number): Promise<number> {
   const row = await db.first<{ n: number }>('SELECT COUNT(*) AS n FROM documents WHERE owner_id = ?', [ownerId]);
   return Number(row?.n ?? 0);
+}
+
+// -------------------------------------------------------------- versions ---
+
+export async function createVersion(
+  db: Db,
+  version: { documentId: string; userId: number; content: string; excerpt: string; now: number },
+): Promise<void> {
+  await db.run(
+    `INSERT INTO document_versions (document_id, user_id, content, excerpt, created_at)
+     VALUES (?, ?, ?, ?, ?)`,
+    [version.documentId, version.userId, version.content, version.excerpt, version.now],
+  );
+}
+
+export async function getLatestVersion(db: Db, documentId: string): Promise<VersionRow | null> {
+  return db.first<VersionRow>(
+    'SELECT * FROM document_versions WHERE document_id = ? ORDER BY created_at DESC, id DESC LIMIT 1',
+    [documentId],
+  );
+}
+
+export async function getVersion(db: Db, documentId: string, id: number): Promise<VersionRow | null> {
+  return db.first<VersionRow>('SELECT * FROM document_versions WHERE document_id = ? AND id = ?', [
+    documentId,
+    id,
+  ]);
+}
+
+export async function listVersions(db: Db, documentId: string): Promise<VersionWithAuthor[]> {
+  return db.all<VersionWithAuthor>(
+    `SELECT v.*, u.name, u.email, u.color
+       FROM document_versions v LEFT JOIN users u ON u.id = v.user_id
+      WHERE v.document_id = ? ORDER BY v.created_at DESC, v.id DESC`,
+    [documentId],
+  );
+}
+
+/** Keep only the newest `keep` versions of a document; older ones are dropped. */
+export async function pruneVersions(db: Db, documentId: string, keep: number): Promise<void> {
+  await db.run(
+    `DELETE FROM document_versions
+      WHERE document_id = ?
+        AND id NOT IN (
+          SELECT id FROM document_versions WHERE document_id = ?
+          ORDER BY created_at DESC, id DESC LIMIT ?
+        )`,
+    [documentId, documentId, keep],
+  );
 }

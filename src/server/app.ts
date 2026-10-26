@@ -9,6 +9,8 @@ const SESSION_COOKIE = 'ajaia_session';
 const SESSION_TTL_SECONDS = 60 * 60 * 24 * 30;
 const MAX_TITLE_LENGTH = 200;
 const MAX_CONTENT_LENGTH = 1_000_000; // ~1 MB of HTML per document
+const MAX_VERSIONS = 30; // snapshots kept per document
+const VERSION_WINDOW_MS = 15_000; // edits inside one window collapse into one version
 
 type AppEnv = { Variables: { user: UserRow | null } };
 
@@ -18,6 +20,11 @@ type Access =
 
 function errorBody(message: string, code: string) {
   return { error: { message, code } };
+}
+
+/** Strip markup to a flat, searchable string. */
+function plainTextOf(content: string): string {
+  return content.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
 }
 
 function newSessionToken(): string {
@@ -61,7 +68,34 @@ export function createApp(db: Db) {
     return c.json(errorBody('Something went wrong on our side.', 'internal_error'), 500);
   });
 
-  const requireUser = (c: { get: (k: 'user') => UserRow | null }) => c.get('user');
+  const currentUser = (c: { get: (k: 'user') => UserRow | null }) => c.get('user');
+
+  /**
+   * Snapshot the document content so an earlier state can be restored.
+   *
+   * Autosave fires often, so edits inside one window collapse into a single
+   * version: the history shows checkpoints, not keystrokes.
+   */
+  async function recordVersion(
+    documentId: string,
+    userId: number,
+    content: string,
+    now: number,
+    force = false,
+  ): Promise<void> {
+    const latest = await repo.getLatestVersion(db, documentId);
+    if (latest && latest.content === content) return; // nothing new to record
+    if (!force && latest && now - latest.created_at < VERSION_WINDOW_MS) return;
+
+    await repo.createVersion(db, {
+      documentId,
+      userId,
+      content,
+      excerpt: plainTextOf(content).slice(0, 240),
+      now,
+    });
+    await repo.pruneVersions(db, documentId, MAX_VERSIONS);
+  }
 
   async function accessFor(docId: string, user: UserRow): Promise<Access> {
     const doc = await repo.getDocument(db, docId);
@@ -131,13 +165,13 @@ export function createApp(db: Db) {
   });
 
   app.get('/api/auth/me', (c) => {
-    const user = requireUser(c);
+    const user = currentUser(c);
     if (!user) return c.json(errorBody('Sign in to continue.', 'unauthenticated'), 401);
     return c.json({ user: toPublicUser(user) });
   });
 
   app.get('/api/users', async (c) => {
-    const user = requireUser(c);
+    const user = currentUser(c);
     if (!user) return c.json(errorBody('Sign in to continue.', 'unauthenticated'), 401);
     const users = await repo.listUsers(db);
     return c.json({ users: users.map(toPublicUser) });
@@ -146,7 +180,7 @@ export function createApp(db: Db) {
   // ----------------------------------------------------------- documents ---
 
   app.get('/api/documents', async (c) => {
-    const user = requireUser(c);
+    const user = currentUser(c);
     if (!user) return c.json(errorBody('Sign in to continue.', 'unauthenticated'), 401);
 
     const owned = await repo.listOwnedDocuments(db, user.id);
@@ -158,7 +192,7 @@ export function createApp(db: Db) {
   });
 
   app.post('/api/documents', async (c) => {
-    const user = requireUser(c);
+    const user = currentUser(c);
     if (!user) return c.json(errorBody('Sign in to continue.', 'unauthenticated'), 401);
 
     let body: unknown = {};
@@ -189,7 +223,6 @@ export function createApp(db: Db) {
       ownerId: user.id,
       title,
       content,
-      plainText: content.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 5000),
       now,
     });
 
@@ -198,7 +231,7 @@ export function createApp(db: Db) {
   });
 
   app.get('/api/documents/:id', async (c) => {
-    const user = requireUser(c);
+    const user = currentUser(c);
     if (!user) return c.json(errorBody('Sign in to continue.', 'unauthenticated'), 401);
 
     const access = await accessFor(c.req.param('id'), user);
@@ -208,7 +241,7 @@ export function createApp(db: Db) {
   });
 
   app.patch('/api/documents/:id', async (c) => {
-    const user = requireUser(c);
+    const user = currentUser(c);
     if (!user) return c.json(errorBody('Sign in to continue.', 'unauthenticated'), 401);
 
     const access = await accessFor(c.req.param('id'), user);
@@ -223,9 +256,9 @@ export function createApp(db: Db) {
     } catch {
       return c.json(errorBody('Expected a JSON body.', 'invalid_body'), 400);
     }
-    const payload = body as { title?: unknown; content?: unknown; plainText?: unknown };
+    const payload = body as { title?: unknown; content?: unknown };
 
-    const patch: { title?: string; content?: string; plainText?: string; now: number } = { now: Date.now() };
+    const patch: { title?: string; content?: string; now: number } = { now: Date.now() };
 
     if (payload.title !== undefined) {
       if (typeof payload.title !== 'string') {
@@ -242,17 +275,17 @@ export function createApp(db: Db) {
       }
       patch.content = payload.content;
     }
-    if (typeof payload.plainText === 'string') {
-      patch.plainText = payload.plainText.slice(0, 5000);
-    }
 
     await repo.updateDocument(db, access.doc.id, patch);
+    if (patch.content !== undefined && patch.content !== access.doc.content) {
+      await recordVersion(access.doc.id, user.id, patch.content, patch.now);
+    }
     const doc = await repo.getDocument(db, access.doc.id);
     return c.json({ document: { ...toSummary(doc!, access.role), content: doc!.content } });
   });
 
   app.delete('/api/documents/:id', async (c) => {
-    const user = requireUser(c);
+    const user = currentUser(c);
     if (!user) return c.json(errorBody('Sign in to continue.', 'unauthenticated'), 401);
 
     const access = await accessFor(c.req.param('id'), user);
@@ -268,7 +301,7 @@ export function createApp(db: Db) {
   // -------------------------------------------------------------- shares ---
 
   app.get('/api/documents/:id/shares', async (c) => {
-    const user = requireUser(c);
+    const user = currentUser(c);
     if (!user) return c.json(errorBody('Sign in to continue.', 'unauthenticated'), 401);
 
     const access = await accessFor(c.req.param('id'), user);
@@ -291,7 +324,7 @@ export function createApp(db: Db) {
   });
 
   app.post('/api/documents/:id/shares', async (c) => {
-    const user = requireUser(c);
+    const user = currentUser(c);
     if (!user) return c.json(errorBody('Sign in to continue.', 'unauthenticated'), 401);
 
     const access = await accessFor(c.req.param('id'), user);
@@ -339,7 +372,7 @@ export function createApp(db: Db) {
   });
 
   app.delete('/api/documents/:id/shares/:userId', async (c) => {
-    const user = requireUser(c);
+    const user = currentUser(c);
     if (!user) return c.json(errorBody('Sign in to continue.', 'unauthenticated'), 401);
 
     const access = await accessFor(c.req.param('id'), user);
@@ -362,6 +395,63 @@ export function createApp(db: Db) {
         createdAt: share.created_at,
       })),
     });
+  });
+
+  // ------------------------------------------------------------ versions ---
+
+  app.get('/api/documents/:id/versions', async (c) => {
+    const user = currentUser(c);
+    if (!user) return c.json(errorBody('Sign in to continue.', 'unauthenticated'), 401);
+
+    const access = await accessFor(c.req.param('id'), user);
+    if (!access.ok) return c.json(errorBody(access.message, access.code), access.status);
+
+    const versions = await repo.listVersions(db, access.doc.id);
+    return c.json({
+      versions: versions.map((version) => ({
+        id: version.id,
+        createdAt: version.created_at,
+        excerpt: version.excerpt,
+        author:
+          version.user_id === null
+            ? null
+            : {
+                id: version.user_id,
+                name: version.name ?? 'Unknown',
+                email: version.email ?? '',
+                color: version.color ?? '#8e8e93',
+              },
+      })),
+    });
+  });
+
+  app.post('/api/documents/:id/versions/:versionId/restore', async (c) => {
+    const user = currentUser(c);
+    if (!user) return c.json(errorBody('Sign in to continue.', 'unauthenticated'), 401);
+
+    const access = await accessFor(c.req.param('id'), user);
+    if (!access.ok) return c.json(errorBody(access.message, access.code), access.status);
+    if (access.role === 'viewer') {
+      return c.json(errorBody('You have view-only access to this document.', 'read_only'), 403);
+    }
+
+    const versionId = Number(c.req.param('versionId'));
+    if (!Number.isInteger(versionId)) {
+      return c.json(errorBody('Invalid version id.', 'invalid_version'), 400);
+    }
+
+    const version = await repo.getVersion(db, access.doc.id, versionId);
+    if (!version) return c.json(errorBody('That version no longer exists.', 'not_found'), 404);
+
+    const now = Date.now();
+    await repo.updateDocument(db, access.doc.id, {
+      content: version.content,
+      now,
+    });
+    await recordVersion(access.doc.id, user.id, version.content, now, true);
+
+    const doc = await repo.getDocument(db, access.doc.id);
+    return c.json({ document: { ...toSummary(doc!, access.role), content: doc!.content } });
   });
 
   app.notFound((c) => c.json(errorBody('Not found.', 'not_found'), 404));

@@ -5,6 +5,7 @@ import type {
   ShareEntry,
   ShareRole,
   User,
+  VersionEntry,
 } from '../shared/types.ts';
 
 export class ApiError extends Error {
@@ -75,4 +76,10 @@ export const api = {
     }),
   removeShare: (id: string, userId: number) =>
     request<{ shares: ShareEntry[] }>(`/api/documents/${id}/shares/${userId}`, { method: 'DELETE' }),
+
+  listVersions: (id: string) => request<{ versions: VersionEntry[] }>(`/api/documents/${id}/versions`),
+  restoreVersion: (id: string, versionId: number) =>
+    request<{ document: DocumentDetail }>(`/api/documents/${id}/versions/${versionId}/restore`, {
+      method: 'POST',
+    }),
 };

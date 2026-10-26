@@ -79,6 +79,8 @@ function DocumentRow({
           <button
             type="button"
             aria-label={`Actions for ${doc.title}`}
+            aria-haspopup="menu"
+            aria-expanded={menuOpen}
             onClick={() => setMenuOpen((open) => !open)}
             className={`rounded-control p-1 text-label-tertiary transition hover:bg-fill-tertiary hover:text-label-primary ${
               menuOpen ? 'bg-fill-tertiary text-label-primary' : 'opacity-0 group-hover:opacity-100 focus:opacity-100'

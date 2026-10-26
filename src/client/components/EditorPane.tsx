@@ -7,6 +7,7 @@ import {
   ArrowUUpLeft,
   ArrowUUpRight,
   CaretDown,
+  ClockCounterClockwise,
   Code,
   DotsThree,
   DownloadSimple,
@@ -39,6 +40,7 @@ interface EditorPaneProps {
   onShare: () => void;
   onDelete: () => void;
   onExport: (filename: string, contents: string, mime: string) => void;
+  onVersionHistory: () => void;
 }
 
 const ROLE_LABEL: Record<Role, string> = { owner: 'Owner', editor: 'Can edit', viewer: 'Can view' };
@@ -86,6 +88,7 @@ export function EditorPane({
   onShare,
   onDelete,
   onExport,
+  onVersionHistory,
 }: EditorPaneProps) {
   const [title, setTitle] = useState(doc.title);
   const [linkOpen, setLinkOpen] = useState(false);
@@ -93,6 +96,7 @@ export function EditorPane({
   const [formatOpen, setFormatOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const loadedId = useRef<string | null>(null);
+  const loadedContent = useRef<string | null>(null);
 
   const readOnly = doc.role === 'viewer';
 
@@ -113,8 +117,11 @@ export function EditorPane({
 
   useEffect(() => {
     if (!editor || !doc) return;
-    if (loadedId.current !== doc.id) {
+    // Reload on a different document, or when the same document arrives with
+    // different content — that is how a restored version reaches the editor.
+    if (loadedId.current !== doc.id || loadedContent.current !== doc.content) {
       loadedId.current = doc.id;
+      loadedContent.current = doc.content;
       editor.commands.setContent(doc.content || '', { emitUpdate: false });
     }
   }, [editor, doc]);
@@ -208,6 +215,7 @@ export function EditorPane({
             <button
               type="button"
               onClick={onShare}
+              aria-haspopup="dialog"
               className="flex items-center gap-1.5 rounded-full border border-separator px-3 py-1.5 text-[15px] font-medium text-label-primary transition hover:bg-fill-tertiary"
             >
               <UserPlus size={16} />
@@ -218,6 +226,8 @@ export function EditorPane({
               <button
                 type="button"
                 aria-label="Document menu"
+                aria-haspopup="menu"
+                aria-expanded={menuOpen}
                 onClick={() => setMenuOpen((open) => !open)}
                 className="hit-target flex h-8 w-8 items-center justify-center rounded-control text-label-secondary transition hover:bg-fill-tertiary hover:text-label-primary"
               >
@@ -229,6 +239,7 @@ export function EditorPane({
                   align="right"
                   onClose={() => setMenuOpen(false)}
                   items={[
+                    { id: 'history', label: 'Version history', icon: ClockCounterClockwise, onSelect: onVersionHistory },
                     { id: 'md', label: 'Export as Markdown', icon: DownloadSimple, onSelect: exportMarkdown },
                     { id: 'txt', label: 'Export as plain text', icon: DownloadSimple, onSelect: exportText },
                     ...(doc.role === 'owner'

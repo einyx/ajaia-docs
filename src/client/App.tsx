@@ -3,10 +3,12 @@ import { List } from '@phosphor-icons/react';
 import type { DocumentDetail, DocumentSummary, Role, User } from '../shared/types.ts';
 import { api, ApiError } from './api.ts';
 import { isSupportedFile, parseImportFile } from './lib/import.ts';
+import { SaveQueue, type PendingPatch } from './lib/saveQueue.ts';
 import { EditorPane, type SaveState } from './components/EditorPane.tsx';
 import { LoginScreen } from './components/LoginScreen.tsx';
 import { ShareDialog } from './components/ShareDialog.tsx';
 import { Sidebar } from './components/Sidebar.tsx';
+import { VersionHistory } from './components/VersionHistory.tsx';
 
 type Phase = 'loading' | 'signed-out' | 'ready';
 
@@ -23,11 +25,12 @@ export function App() {
   const [active, setActive] = useState<DocumentDetail | null>(null);
   const [saveState, setSaveState] = useState<SaveState>('idle');
   const [shareOpen, setShareOpen] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [toast, setToast] = useState<Toast | null>(null);
   const [navOpen, setNavOpen] = useState(false);
 
-  const pending = useRef<{ title?: string; content?: string; plainText?: string }>({});
+  const pending = useRef(new SaveQueue());
   const saveTimer = useRef<number | undefined>(undefined);
   const activeId = useRef<string | null>(null);
   const activeRole = useRef<Role>('owner');
@@ -44,43 +47,46 @@ export function App() {
     return data;
   }, []);
 
-  // Persist queued edits (debounced) for the active document.
+  // Persist queued edits (debounced). Every document keeps its own queue entry, so a
+  // retry always writes back to the document the edit came from.
   const flush = useCallback(async () => {
     window.clearTimeout(saveTimer.current);
-    const patch = pending.current;
-    pending.current = {};
-    const id = activeId.current;
-    if (!id || Object.keys(patch).length === 0) return;
-    // Viewers never write — the API would reject it anyway.
-    if (activeRole.current === 'viewer') return;
+    let failed = false;
 
-    try {
-      await api.patchDocument(id, patch);
-      setSaveState('saved');
-      setOwned((current) =>
-        current.map((doc) =>
-          doc.id === id
-            ? { ...doc, title: patch.title ?? doc.title, updatedAt: Date.now() }
-            : doc,
-        ),
-      );
-      setShared((current) =>
-        current.map((doc) =>
-          doc.id === id
-            ? { ...doc, title: patch.title ?? doc.title, updatedAt: Date.now() }
-            : doc,
-        ),
-      );
-    } catch (err) {
-      setSaveState('error');
-      pending.current = { ...patch, ...pending.current };
-      saveTimer.current = window.setTimeout(() => void flush(), 3000);
+    for (const id of pending.current.ids()) {
+      const patch = pending.current.take(id);
+      if (!patch) continue;
+      // Viewers never write — the API would reject it anyway.
+      if (id === activeId.current && activeRole.current === 'viewer') continue;
+
+      try {
+        await api.patchDocument(id, patch);
+        setSaveState('saved');
+        setOwned((current) =>
+          current.map((doc) =>
+            doc.id === id ? { ...doc, title: patch.title ?? doc.title, updatedAt: Date.now() } : doc,
+          ),
+        );
+        setShared((current) =>
+          current.map((doc) =>
+            doc.id === id ? { ...doc, title: patch.title ?? doc.title, updatedAt: Date.now() } : doc,
+          ),
+        );
+      } catch {
+        setSaveState('error');
+        pending.current.restore(id, patch);
+        failed = true;
+      }
     }
+
+    if (failed) saveTimer.current = window.setTimeout(() => void flush(), 3000);
   }, []);
 
   const queueSave = useCallback(
-    (patch: { title?: string; content?: string; plainText?: string }) => {
-      pending.current = { ...pending.current, ...patch };
+    (patch: PendingPatch) => {
+      const id = activeId.current;
+      if (!id) return;
+      pending.current.enqueue(id, patch);
       setSaveState('saving');
       window.clearTimeout(saveTimer.current);
       saveTimer.current = window.setTimeout(() => void flush(), 700);
@@ -114,7 +120,8 @@ export function App() {
         const data = await api.listDocuments();
         setOwned(data.owned);
         setShared(data.shared);
-        if (data.owned[0]) await openDocument(data.owned[0].id);
+        const first = data.owned[0] ?? data.shared[0];
+        if (first) await openDocument(first.id);
         setPhase('ready');
       } catch {
         setPhase('signed-out');
@@ -222,6 +229,14 @@ export function App() {
     showToast(`Exported ${filename}.`);
   }
 
+  function handleRestored(doc: DocumentDetail) {
+    // Drop unsaved edits for this document — they would overwrite the restored content.
+    pending.current.take(doc.id);
+    setActive(doc);
+    void refreshList();
+    showToast('Restored an earlier version.');
+  }
+
   if (phase === 'loading') {
     return (
       <div className="app-canvas flex min-h-full items-center justify-center">
@@ -241,7 +256,8 @@ export function App() {
           const data = await api.listDocuments();
           setOwned(data.owned);
           setShared(data.shared);
-          if (data.owned[0]) await openDocument(data.owned[0].id);
+          const first = data.owned[0] ?? data.shared[0];
+          if (first) await openDocument(first.id);
           setPhase('ready');
         }}
       />
@@ -288,6 +304,7 @@ export function App() {
             onContentChange={(content, plainText) => queueSave({ content, plainText })}
             onTitleChange={(title) => queueSave({ title })}
             onShare={() => setShareOpen(true)}
+            onVersionHistory={() => setHistoryOpen(true)}
             onDelete={() => void handleDelete(active.id)}
             onExport={handleExport}
           />
@@ -313,6 +330,10 @@ export function App() {
       </main>
 
       {shareOpen && active ? <ShareDialog doc={active} onClose={() => setShareOpen(false)} /> : null}
+
+      {historyOpen && active ? (
+        <VersionHistory doc={active} onClose={() => setHistoryOpen(false)} onRestored={handleRestored} />
+      ) : null}
 
       {toast ? (
         <div

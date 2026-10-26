@@ -5,12 +5,13 @@
  *   npm run dev:api   -> http://localhost:8787
  */
 import { DatabaseSync } from 'node:sqlite';
-import { readFileSync, mkdirSync } from 'node:fs';
+import { mkdirSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { serve } from '@hono/node-server';
 import { createApp } from './app.ts';
 import { sqliteAdapter } from './db.ts';
+import { readSchema } from './schema.ts';
 import { ensureSeed } from './seed.ts';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -21,7 +22,9 @@ mkdirSync(dirname(dbPath), { recursive: true });
 
 const db = new DatabaseSync(dbPath);
 db.exec('PRAGMA journal_mode = WAL;');
-db.exec(readFileSync(resolve(root, 'migrations/0001_init.sql'), 'utf8'));
+// D1 enforces foreign keys by default; match it so cascades behave the same.
+db.exec('PRAGMA foreign_keys = ON;');
+db.exec(readSchema(resolve(root, 'migrations')));
 
 await ensureSeed(sqliteAdapter(db));
 

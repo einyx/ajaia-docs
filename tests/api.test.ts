@@ -1,20 +1,23 @@
-import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createApp } from '../src/server/app.ts';
 import { sqliteAdapter } from '../src/server/db.ts';
+import { readSchema } from '../src/server/schema.ts';
 import { ensureSeed } from '../src/server/seed.ts';
 
-const SCHEMA = readFileSync(resolve(process.cwd(), 'migrations/0001_init.sql'), 'utf8');
+const SCHEMA = readSchema(resolve(process.cwd(), 'migrations'));
 const ALICE = 'alessio@linux.com';
 const MAYA = 'maya@ajaia.dev';
 
 let app: ReturnType<typeof createApp>;
+let db: DatabaseSync;
 
 beforeEach(async () => {
-  const db = new DatabaseSync(':memory:');
+  db = new DatabaseSync(':memory:');
   db.exec(SCHEMA);
+  // D1 enforces foreign keys by default; match it so cascades behave the same.
+  db.exec('PRAGMA foreign_keys = ON;');
   const adapter = sqliteAdapter(db);
   await ensureSeed(adapter);
   app = createApp(adapter);
@@ -183,6 +186,86 @@ describe('sharing and access control', () => {
       headers: auth(maya),
     });
     expect(write.status).toBe(403);
+    expect((await write.json()).error.code).toBe('read_only');
+
+    const remove = await app.request(`/api/documents/${doc.id}`, {
+      method: 'DELETE',
+      headers: { Cookie: maya },
+    });
+    expect(remove.status).toBe(403);
+  });
+
+  it('lets only the owner grant, change and revoke access', async () => {
+    const alice = await signIn(ALICE);
+    const maya = await signIn(MAYA);
+    const doc = await createDoc(alice, 'Access control');
+
+    await app.request(`/api/documents/${doc.id}/shares`, {
+      method: 'POST',
+      body: JSON.stringify({ email: MAYA, role: 'editor' }),
+      headers: auth(alice),
+    });
+
+    // An editor cannot hand out access.
+    const grant = await app.request(`/api/documents/${doc.id}/shares`, {
+      method: 'POST',
+      body: JSON.stringify({ email: 'sam@ajaia.dev', role: 'viewer' }),
+      headers: auth(maya),
+    });
+    expect(grant.status).toBe(403);
+    expect((await grant.json()).error.code).toBe('forbidden');
+
+    // The owner can see who has access.
+    const ownerShares = await app.request(`/api/documents/${doc.id}/shares`, { headers: { Cookie: alice } });
+    expect(ownerShares.status).toBe(200);
+    const shares = (await ownerShares.json()).shares as { user: { id: number; email: string } }[];
+    const mayaShare = shares.find((share) => share.user.email === MAYA);
+    expect(mayaShare).toBeTruthy();
+
+    // An editor cannot revoke access.
+    const revoke = await app.request(`/api/documents/${doc.id}/shares/${mayaShare!.user.id}`, {
+      method: 'DELETE',
+      headers: { Cookie: maya },
+    });
+    expect(revoke.status).toBe(403);
+
+    // The owner can, and the share is gone.
+    const removed = await app.request(`/api/documents/${doc.id}/shares/${mayaShare!.user.id}`, {
+      method: 'DELETE',
+      headers: { Cookie: alice },
+    });
+    expect(removed.status).toBe(200);
+
+    const after = await app.request(`/api/documents/${doc.id}`, { headers: { Cookie: maya } });
+    expect(after.status).toBe(403);
+
+    const mayaDocs = await app.request('/api/documents', { headers: { Cookie: maya } });
+    const sharedIds = ((await mayaDocs.json()).shared as { id: string }[]).map((entry) => entry.id);
+    expect(sharedIds).not.toContain(doc.id);
+  });
+
+  it('rejects content over the 1 MB limit', async () => {
+    const alice = await signIn(ALICE);
+    const doc = await createDoc(alice, 'Too big');
+
+    const res = await app.request(`/api/documents/${doc.id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ content: 'x'.repeat(1_000_001) }),
+      headers: auth(alice),
+    });
+    expect(res.status).toBe(413);
+    expect((await res.json()).error.code).toBe('content_too_large');
+  });
+
+  it('ends the session on logout', async () => {
+    const alice = await signIn(ALICE);
+    expect((await app.request('/api/auth/me', { headers: { Cookie: alice } })).status).toBe(200);
+
+    const out = await app.request('/api/auth/logout', { method: 'POST', headers: { Cookie: alice } });
+    expect(out.status).toBe(200);
+
+    expect((await app.request('/api/auth/me', { headers: { Cookie: alice } })).status).toBe(401);
+    expect((await app.request('/api/documents', { headers: { Cookie: alice } })).status).toBe(401);
   });
 
   it('validates share payloads', async () => {
@@ -209,5 +292,130 @@ describe('sharing and access control', () => {
       headers: auth(alice),
     });
     expect(badContent.status).toBe(400);
+  });
+});
+
+describe('version history', () => {
+  async function patchDoc(cookie: string, id: string, content: string) {
+    const res = await app.request(`/api/documents/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ content }),
+      headers: auth(cookie),
+    });
+    expect(res.status).toBe(200);
+  }
+
+  async function listVersions(cookie: string, id: string) {
+    const res = await app.request(`/api/documents/${id}/versions`, { headers: { Cookie: cookie } });
+    expect(res.status).toBe(200);
+    return (await res.json()).versions as {
+      id: number;
+      createdAt: number;
+      excerpt: string;
+      author: { email: string } | null;
+    }[];
+  }
+
+  /** Age every stored version so the next edit lands in a new window. */
+  function ageVersions() {
+    db.exec('UPDATE document_versions SET created_at = 0');
+  }
+
+  it('records a version when the content changes', async () => {
+    const alice = await signIn(ALICE);
+    const doc = await createDoc(alice, 'Versioned');
+
+    await patchDoc(alice, doc.id, '<p>first draft</p>');
+
+    const versions = await listVersions(alice, doc.id);
+    expect(versions).toHaveLength(1);
+    expect(versions[0].excerpt).toBe('first draft');
+    expect(versions[0].author?.email).toBe(ALICE);
+  });
+
+  it('collapses edits inside one window into a single version', async () => {
+    const alice = await signIn(ALICE);
+    const doc = await createDoc(alice, 'Busy');
+
+    await patchDoc(alice, doc.id, '<p>one</p>');
+    await patchDoc(alice, doc.id, '<p>two</p>');
+    await patchDoc(alice, doc.id, '<p>three</p>');
+
+    expect(await listVersions(alice, doc.id)).toHaveLength(1);
+  });
+
+  it('starts a new version once the window has passed', async () => {
+    const alice = await signIn(ALICE);
+    const doc = await createDoc(alice, 'Over time');
+
+    await patchDoc(alice, doc.id, '<p>one</p>');
+    ageVersions();
+    await patchDoc(alice, doc.id, '<p>two</p>');
+
+    const versions = await listVersions(alice, doc.id);
+    expect(versions).toHaveLength(2);
+    expect(versions[0].excerpt).toBe('two');
+  });
+
+  it('restores an earlier version', async () => {
+    const alice = await signIn(ALICE);
+    const doc = await createDoc(alice, 'Restore me');
+
+    await patchDoc(alice, doc.id, '<p>the good draft</p>');
+    ageVersions();
+    await patchDoc(alice, doc.id, '<p>the bad draft</p>');
+
+    const versions = await listVersions(alice, doc.id);
+    const oldest = versions[versions.length - 1];
+    expect(oldest.excerpt).toBe('the good draft');
+
+    const restore = await app.request(`/api/documents/${doc.id}/versions/${oldest.id}/restore`, {
+      method: 'POST',
+      headers: { Cookie: alice },
+    });
+    expect(restore.status).toBe(200);
+
+    const reload = await app.request(`/api/documents/${doc.id}`, { headers: { Cookie: alice } });
+    expect((await reload.json()).document.content).toBe('<p>the good draft</p>');
+  });
+
+  it('lets a viewer read the history but not restore it', async () => {
+    const alice = await signIn(ALICE);
+    const maya = await signIn(MAYA);
+    const doc = await createDoc(alice, 'Read only history');
+
+    await app.request(`/api/documents/${doc.id}/shares`, {
+      method: 'POST',
+      body: JSON.stringify({ email: MAYA, role: 'viewer' }),
+      headers: auth(alice),
+    });
+    await patchDoc(alice, doc.id, '<p>draft</p>');
+
+    const versions = await listVersions(maya, doc.id);
+    expect(versions).toHaveLength(1);
+
+    const restore = await app.request(`/api/documents/${doc.id}/versions/${versions[0].id}/restore`, {
+      method: 'POST',
+      headers: { Cookie: maya },
+    });
+    expect(restore.status).toBe(403);
+    expect((await restore.json()).error.code).toBe('read_only');
+  });
+
+  it('blocks users without access from reading or restoring history', async () => {
+    const alice = await signIn(ALICE);
+    const maya = await signIn(MAYA);
+    const doc = await createDoc(alice, 'Private history');
+    await patchDoc(alice, doc.id, '<p>secret</p>');
+
+    const read = await app.request(`/api/documents/${doc.id}/versions`, { headers: { Cookie: maya } });
+    expect(read.status).toBe(403);
+
+    const versions = await listVersions(alice, doc.id);
+    const restore = await app.request(`/api/documents/${doc.id}/versions/${versions[0].id}/restore`, {
+      method: 'POST',
+      headers: { Cookie: maya },
+    });
+    expect(restore.status).toBe(403);
   });
 });
