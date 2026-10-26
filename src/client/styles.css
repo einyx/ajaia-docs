@@ -1,0 +1,436 @@
+@import 'tailwindcss';
+
+/* ==========================================================================
+   Apple HIG tokens + Liquid Glass (web approximation)
+   https://developer.apple.com/design/human-interface-guidelines
+   https://developer.apple.com/documentation/technologyoverviews/adopting-liquid-glass
+
+   - Semantic colors and text styles follow Apple's system palette.
+   - Liquid Glass is reserved for the navigation layer (sidebar, toolbars,
+     sheets, menus). The content layer — page, text, lists — stays opaque.
+   - The glass effect is a CSS approximation: tint layer (rgba) + blur +
+     saturation (backdrop-filter) + shadow (separation) + highlight (inset).
+   - Accessibility fallbacks: reduced transparency, reduced motion and
+     increased contrast all collapse the glass back to solid surfaces.
+   ========================================================================== */
+
+:root {
+  color-scheme: light;
+
+  /* Labels */
+  --label-primary: #000000;
+  --label-secondary: rgba(60, 60, 67, 0.6);
+  --label-tertiary: rgba(60, 60, 67, 0.3);
+  --label-quaternary: rgba(60, 60, 67, 0.18);
+
+  /* Backgrounds */
+  --bg-primary: #ffffff;
+  --bg-secondary: #f2f2f7;
+  --bg-tertiary: #ffffff;
+  --bg-grouped: #f2f2f7;
+
+  /* Separators */
+  --separator: rgba(60, 60, 67, 0.29);
+
+  /* Fills (controls, selected items) */
+  --fill-primary: rgba(120, 120, 128, 0.2);
+  --fill-secondary: rgba(120, 120, 128, 0.16);
+  --fill-tertiary: rgba(118, 118, 128, 0.12);
+
+  /* Accents */
+  --accent: #007aff;
+  --accent-pressed: #0062cc;
+  --accent-tint: rgba(0, 122, 255, 0.12);
+  --accent-tint-hover: rgba(0, 122, 255, 0.18);
+  --destructive: #ff3b30;
+  --success: #34c759;
+
+  /* Selection */
+  --selection: rgba(0, 122, 255, 0.2);
+
+  /* Liquid Glass layers */
+  --glass-tint: rgba(255, 255, 255, 0.55);
+  --glass-edge: rgba(255, 255, 255, 0.6);
+  --glass-highlight: rgba(255, 255, 255, 0.55);
+  --glass-shadow: 0 1px 0 0 rgba(255, 255, 255, 0.5) inset,
+    0 16px 40px -20px rgba(60, 60, 67, 0.45);
+
+  /* Shape */
+  --radius-control: 8px;
+  --radius-card: 12px;
+  --radius-page: 10px;
+  --radius-panel: 16px;
+
+  /* Elevation */
+  --shadow-page: 0 1px 2px rgba(60, 60, 67, 0.08), 0 12px 32px -18px rgba(60, 60, 67, 0.35);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+
+    --label-primary: #ffffff;
+    --label-secondary: rgba(235, 235, 245, 0.6);
+    --label-tertiary: rgba(235, 235, 245, 0.3);
+    --label-quaternary: rgba(235, 235, 245, 0.18);
+
+    --bg-primary: #000000;
+    --bg-secondary: #1c1c1e;
+    --bg-tertiary: #2c2c2e;
+    --bg-grouped: #1c1c1e;
+
+    --separator: rgba(84, 84, 88, 0.65);
+
+    --fill-primary: rgba(120, 120, 128, 0.36);
+    --fill-secondary: rgba(120, 120, 128, 0.32);
+    --fill-tertiary: rgba(118, 118, 128, 0.24);
+
+    --accent: #0a84ff;
+    --accent-pressed: #409cff;
+    --accent-tint: rgba(10, 132, 255, 0.2);
+    --accent-tint-hover: rgba(10, 132, 255, 0.28);
+    --destructive: #ff453a;
+    --success: #30d158;
+
+    --selection: rgba(10, 132, 255, 0.28);
+
+    --glass-tint: rgba(38, 38, 42, 0.62);
+    --glass-edge: rgba(255, 255, 255, 0.14);
+    --glass-highlight: rgba(255, 255, 255, 0.12);
+    --glass-shadow: 0 1px 0 0 rgba(255, 255, 255, 0.08) inset,
+      0 16px 40px -20px rgba(0, 0, 0, 0.8);
+
+    --shadow-page: 0 1px 2px rgba(0, 0, 0, 0.5), 0 12px 32px -18px rgba(0, 0, 0, 0.7);
+  }
+}
+
+@theme inline {
+  --font-sans:
+    -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', 'Helvetica Neue', Arial,
+    sans-serif;
+  --font-mono: 'SF Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  --color-label-primary: var(--label-primary);
+  --color-label-secondary: var(--label-secondary);
+  --color-label-tertiary: var(--label-tertiary);
+  --color-label-quaternary: var(--label-quaternary);
+
+  --color-bg-primary: var(--bg-primary);
+  --color-bg-secondary: var(--bg-secondary);
+  --color-bg-tertiary: var(--bg-tertiary);
+  --color-bg-grouped: var(--bg-grouped);
+
+  --color-separator: var(--separator);
+  --color-fill-primary: var(--fill-primary);
+  --color-fill-secondary: var(--fill-secondary);
+  --color-fill-tertiary: var(--fill-tertiary);
+
+  --color-accent: var(--accent);
+  --color-accent-pressed: var(--accent-pressed);
+  --color-accent-tint: var(--accent-tint);
+  --color-destructive: var(--destructive);
+  --color-success: var(--success);
+
+  /* Apple text styles */
+  --text-large-title: 34px;
+  --text-large-title--line-height: 41px;
+  --text-title-1: 28px;
+  --text-title-1--line-height: 34px;
+  --text-title-2: 22px;
+  --text-title-2--line-height: 28px;
+  --text-title-3: 20px;
+  --text-title-3--line-height: 25px;
+  --text-headline: 17px;
+  --text-headline--line-height: 22px;
+  --text-body: 17px;
+  --text-body--line-height: 22px;
+  --text-callout: 16px;
+  --text-callout--line-height: 21px;
+  --text-subhead: 15px;
+  --text-subhead--line-height: 20px;
+  --text-footnote: 13px;
+  --text-footnote--line-height: 18px;
+  --text-caption: 12px;
+  --text-caption--line-height: 16px;
+
+  --radius-control: 8px;
+  --radius-card: 12px;
+  --radius-page: 10px;
+  --radius-panel: 16px;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  color: var(--label-primary);
+  font-family: var(--font-sans);
+  font-size: 17px;
+  line-height: 22px;
+  -webkit-font-smoothing: antialiased;
+  -webkit-text-size-adjust: 100%;
+}
+
+::selection {
+  background: var(--selection);
+}
+
+/* Focus — Apple's focus ring on every interactive element. */
+:where(button, a, input, select, textarea, [tabindex]):focus-visible {
+  outline: 3px solid var(--accent-tint-hover);
+  outline-offset: 2px;
+  border-radius: var(--radius-control);
+}
+
+/* ------------------------------------------------------------ app canvas -- */
+
+.app-canvas {
+  background:
+    radial-gradient(120% 80% at 12% 0%, rgba(0, 122, 255, 0.1), transparent 55%),
+    radial-gradient(90% 70% at 100% 100%, rgba(88, 86, 214, 0.09), transparent 60%),
+    var(--bg-secondary);
+}
+
+@media (prefers-color-scheme: dark) {
+  .app-canvas {
+    background:
+      radial-gradient(120% 80% at 12% 0%, rgba(10, 132, 255, 0.16), transparent 55%),
+      radial-gradient(90% 70% at 100% 100%, rgba(94, 92, 230, 0.14), transparent 60%),
+      var(--bg-secondary);
+  }
+}
+
+/* --------------------------------------------------------- liquid glass -- */
+
+.glass {
+  position: relative;
+  background: var(--glass-tint);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid var(--glass-edge);
+  box-shadow: var(--glass-shadow);
+}
+
+.glass-thin {
+  background: color-mix(in srgb, var(--glass-tint) 72%, transparent);
+  backdrop-filter: blur(18px) saturate(180%);
+  -webkit-backdrop-filter: blur(18px) saturate(180%);
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .glass,
+  .glass-thin {
+    background: var(--bg-primary);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border-color: var(--separator);
+  }
+}
+
+@media (prefers-contrast: more) {
+  :root {
+    --separator: rgba(60, 60, 67, 0.55);
+    --label-secondary: rgba(60, 60, 67, 0.75);
+  }
+
+  .glass,
+  .glass-thin {
+    background: var(--bg-primary);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  @media (prefers-contrast: more) {
+    :root {
+      --separator: rgba(235, 235, 245, 0.7);
+      --label-secondary: rgba(235, 235, 245, 0.8);
+    }
+  }
+}
+
+/* -------------------------------------------------------------- surfaces -- */
+
+.page-canvas {
+  background: var(--bg-primary);
+  border-radius: var(--radius-page);
+  border: 1px solid var(--separator);
+  box-shadow: var(--shadow-page);
+}
+
+.surface-grouped {
+  background: var(--bg-primary);
+  border-radius: var(--radius-card);
+  overflow: hidden;
+}
+
+/* ---------------------------------------------------------------- editor -- */
+
+.ProseMirror {
+  outline: none;
+  min-height: 60vh;
+  font-size: 17px;
+  line-height: 26px;
+  color: var(--label-primary);
+}
+
+.ProseMirror > * + * {
+  margin-top: 0.9em;
+}
+
+.ProseMirror h1 {
+  font-size: 28px;
+  line-height: 34px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--label-primary);
+}
+
+.ProseMirror h2 {
+  font-size: 22px;
+  line-height: 28px;
+  font-weight: 650;
+  letter-spacing: -0.015em;
+  color: var(--label-primary);
+}
+
+.ProseMirror h3 {
+  font-size: 20px;
+  line-height: 25px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  color: var(--label-primary);
+}
+
+.ProseMirror p {
+  margin: 0;
+}
+
+.ProseMirror ul,
+.ProseMirror ol {
+  padding-left: 1.4rem;
+}
+
+.ProseMirror ul {
+  list-style: disc;
+}
+
+.ProseMirror ol {
+  list-style: decimal;
+}
+
+.ProseMirror li + li {
+  margin-top: 0.25rem;
+}
+
+.ProseMirror li p {
+  margin: 0;
+}
+
+.ProseMirror blockquote {
+  border-left: 3px solid var(--accent);
+  padding-left: 0.9rem;
+  color: var(--label-secondary);
+  font-style: italic;
+}
+
+.ProseMirror code {
+  background: var(--fill-tertiary);
+  border-radius: 5px;
+  padding: 0.1rem 0.32rem;
+  font-size: 0.88em;
+  font-family: var(--font-mono);
+}
+
+.ProseMirror pre {
+  background: var(--label-primary);
+  color: var(--bg-primary);
+  border-radius: var(--radius-control);
+  padding: 0.9rem 1rem;
+  overflow-x: auto;
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.ProseMirror pre code {
+  background: transparent;
+  padding: 0;
+  color: inherit;
+}
+
+.ProseMirror a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.ProseMirror hr {
+  border: none;
+  border-top: 1px solid var(--separator);
+  margin: 1.75rem 0;
+}
+
+.ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  color: var(--label-tertiary);
+  pointer-events: none;
+}
+
+/* ------------------------------------------------------------ scrollbar -- */
+
+.thin-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: var(--label-quaternary) transparent;
+}
+
+.thin-scrollbar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.thin-scrollbar::-webkit-scrollbar-thumb {
+  background-color: var(--label-quaternary);
+  border-radius: 9999px;
+}
+
+/* -------------------------------------------------------------- motion -- */
+
+/* Apple's 44pt minimum target applies to coarse pointers. */
+@media (pointer: coarse) {
+  .hit-target {
+    min-width: 44px;
+    min-height: 44px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@keyframes dialog-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.dialog-enter {
+  animation: dialog-enter 180ms cubic-bezier(0.25, 0.1, 0.25, 1);
+}

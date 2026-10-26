@@ -1,0 +1,659 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ajaia Docs — warm mockup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --canvas:#FCE8C6; --canvas-2:#F8D6A8;
+  --peach:#F9C896; --peach-deep:#EFB072;
+  --lace:#FDF6E8; --cream:#FFFCF4; --paper:#FFFDF8;
+  --plum:#2A1023; --plum-2:rgba(42,16,35,.68); --plum-3:rgba(42,16,35,.45);
+  --line:rgba(42,16,35,.13); --line-2:rgba(42,16,35,.24);
+  --burgundy:#6E2138; --rose:#D4788A; --moss:#4E6B4A;
+  --shadow:0 16px 40px -26px rgba(42,16,35,.45);
+  --shadow-lg:0 34px 70px -38px rgba(42,16,35,.55);
+  --r-card:22px; --r-panel:26px;
+  --fd:'Outfit',ui-rounded,'SF Pro Rounded',system-ui,sans-serif;
+  --fu:'Inter',system-ui,-apple-system,sans-serif;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0; color:var(--plum); font-family:var(--fu); font-size:15px; line-height:1.6;
+  background:
+    radial-gradient(110% 55% at 50% 0%, #FEF1D9 0%, rgba(254,241,217,0) 62%),
+    linear-gradient(180deg, var(--canvas) 0%, var(--canvas-2) 100%);
+  background-attachment:fixed;
+}
+body::before{
+  content:''; position:fixed; inset:0; pointer-events:none; opacity:.4; z-index:0;
+  background-image:radial-gradient(rgba(42,16,35,.17) 1px, transparent 1.3px);
+  background-size:15px 15px;
+  -webkit-mask-image:radial-gradient(120% 70% at 50% 0%, #000 0%, transparent 72%);
+          mask-image:radial-gradient(120% 70% at 50% 0%, #000 0%, transparent 72%);
+}
+.wrap{position:relative; z-index:1}
+
+/* ------------------------------------------------------------ mock chrome */
+.mock-head{padding:78px 28px 34px; text-align:center}
+.eyebrow{
+  font-family:var(--fd); font-size:11px; font-weight:600; letter-spacing:.18em;
+  text-transform:uppercase; color:var(--plum-3);
+}
+.mock-head h1{
+  font-family:var(--fd); font-weight:700; font-size:clamp(34px,5vw,54px); line-height:1.05;
+  letter-spacing:-.025em; margin:14px 0 0;
+}
+.lede{max-width:640px; margin:18px auto 0; color:var(--plum-2); font-size:16px}
+.jump{display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:30px}
+.jump a{
+  font-family:var(--fd); font-weight:500; font-size:14px; text-decoration:none; color:var(--plum);
+  padding:8px 18px; border-radius:999px; border:1px solid var(--line-2); background:rgba(255,252,244,.55);
+  transition:background .15s, transform .15s;
+}
+.jump a:hover{background:var(--cream); transform:translateY(-1px)}
+
+.screen{padding:34px 20px 10px; max-width:1300px; margin:0 auto}
+.screen-label{
+  display:flex; align-items:baseline; gap:12px; margin:0 6px 14px;
+}
+.screen-label .n{font-family:var(--fd); font-weight:700; font-size:13px; color:var(--burgundy); letter-spacing:.1em}
+.screen-label .t{font-family:var(--fd); font-weight:600; font-size:19px; letter-spacing:-.01em}
+.screen-label .d{font-size:13px; color:var(--plum-3)}
+
+.frame{
+  background:var(--cream); border:1px solid var(--line); border-radius:var(--r-panel);
+  box-shadow:var(--shadow-lg); overflow:hidden;
+}
+.frame-bar{
+  display:flex; align-items:center; gap:8px; padding:11px 16px;
+  background:var(--lace); border-bottom:1px solid var(--line);
+}
+.fdot{width:10px; height:10px; border-radius:999px; background:var(--peach-deep); opacity:.55}
+.fdot:nth-child(2){opacity:.4} .fdot:nth-child(3){opacity:.28}
+.url-pill{
+  margin:0 auto; min-width:230px; max-width:320px; flex:1; text-align:center;
+  font-size:12px; color:var(--plum-3); background:var(--cream);
+  border:1px solid var(--line); border-radius:999px; padding:4px 14px;
+}
+
+/* ------------------------------------------------------------- primitives */
+.card{background:var(--cream); border:1px solid var(--line); border-radius:var(--r-card); box-shadow:var(--shadow)}
+.btn{
+  display:inline-flex; align-items:center; gap:8px; justify-content:center;
+  font-family:var(--fd); font-weight:500; font-size:14px; line-height:1;
+  padding:10px 18px; border-radius:999px; cursor:pointer; white-space:nowrap;
+  border:1.5px solid transparent; background:none; color:var(--plum);
+}
+.btn-primary{background:var(--plum); color:#FFF8EC; border-color:var(--plum)}
+.btn-primary:hover{background:#3B1730}
+.btn-ghost{border-color:var(--plum); background:transparent}
+.btn-ghost:hover{background:rgba(42,16,35,.06)}
+.btn-quiet{color:var(--plum-2); padding:9px 14px}
+.btn-quiet:hover{background:rgba(42,16,35,.06)}
+.btn-block{width:100%; justify-content:flex-start}
+.icon-btn{
+  width:34px; height:34px; display:inline-grid; place-items:center; border-radius:999px;
+  border:1.5px solid transparent; background:none; color:var(--plum); cursor:pointer; padding:0;
+}
+.icon-btn:hover{background:rgba(42,16,35,.07)}
+.i{width:18px; height:18px; stroke:currentColor; fill:none; stroke-width:1.9; stroke-linecap:round; stroke-linejoin:round; flex:none}
+.i-sm{width:15px; height:15px}
+.i-lg{width:20px; height:20px}
+.input{
+  display:flex; align-items:center; gap:9px; background:var(--paper);
+  border:1.5px solid var(--line-2); border-radius:999px; padding:9px 16px;
+  color:var(--plum); font-family:var(--fu); font-size:14px; width:100%;
+}
+.input::placeholder{color:var(--plum-3)}
+.input-plain{font-size:14px}
+.chip{
+  font-family:var(--fd); font-size:12px; font-weight:500; padding:6px 14px;
+  border-radius:999px; border:1.5px solid var(--line-2); color:var(--plum-2); background:rgba(255,252,244,.6);
+}
+.avatar{
+  width:34px; height:34px; border-radius:999px; display:grid; place-items:center;
+  font-family:var(--fd); font-weight:600; font-size:13px; color:#FFF8EC; flex:none;
+}
+.av-plum{background:#4A2038} .av-rose{background:var(--rose)} .av-moss{background:var(--moss)} .av-plum2{background:#7A3B57}
+.who{display:flex; flex-direction:column; line-height:1.35; min-width:0}
+.who b{font-family:var(--fd); font-weight:600; font-size:14px}
+.who small{font-size:12px; color:var(--plum-3)}
+.rule{display:flex; align-items:center; gap:14px; color:var(--plum-3); font-size:12.5px; margin:20px 0}
+.rule::before,.rule::after{content:''; height:1px; background:var(--line); flex:1}
+
+/* --------------------------------------------------------------- sign in */
+.app-signin{background:linear-gradient(180deg,#FCEAC9,#F8DDB4); padding:64px 24px 56px}
+.signin-wrap{max-width:470px; margin:0 auto}
+.brand{display:flex; align-items:center; gap:12px; margin-bottom:26px}
+.brand-mark{
+  width:42px; height:42px; border-radius:14px; background:var(--plum); color:#FFF8EC;
+  display:grid; place-items:center; font-family:var(--fd); font-weight:700; font-size:22px;
+}
+.brand-name{font-family:var(--fd); font-weight:700; font-size:19px; letter-spacing:-.01em; line-height:1.2}
+.brand-tag{font-size:12.5px; color:var(--plum-2)}
+.signin-card{padding:28px 26px 24px}
+.card-title{font-family:var(--fd); font-weight:600; font-size:22px; letter-spacing:-.015em; margin:0}
+.card-sub{margin:6px 0 20px; color:var(--plum-2); font-size:13.5px; line-height:1.5}
+.account-list{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:8px}
+.account{
+  display:flex; align-items:center; gap:12px; padding:9px 12px 9px 10px;
+  border:1px solid var(--line); border-radius:16px; background:var(--paper);
+}
+.account .who{flex:1}
+.account .btn{padding:8px 16px; font-size:13px}
+.footnote{text-align:center; color:var(--plum-3); font-size:12px; margin:18px 0 0}
+.signin-row{display:flex; gap:10px}
+.signin-row .input{flex:1}
+
+/* ---------------------------------------------------------------- editor */
+.app-editor{display:grid; grid-template-columns:264px minmax(0,1fr); min-height:820px; background:var(--canvas)}
+.side{
+  background:var(--lace); border-right:1px solid var(--line);
+  padding:20px 16px; display:flex; flex-direction:column; gap:9px;
+}
+.side-brand{display:flex; align-items:center; gap:10px; margin-bottom:14px}
+.side-brand .brand-mark{width:36px; height:36px; border-radius:12px; font-size:19px}
+.side-brand .brand-name{font-size:17px}
+.side-search{margin:14px 0 4px}
+.side-label{
+  font-family:var(--fd); font-size:11px; font-weight:600; letter-spacing:.14em;
+  text-transform:uppercase; color:var(--plum-3); margin:16px 0 4px; padding-left:4px;
+}
+.doc-list{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:2px}
+.doc{
+  display:flex; align-items:center; gap:10px; padding:9px 11px; border-radius:14px;
+  color:var(--plum); text-decoration:none; border:1px solid transparent;
+}
+.doc:hover{background:rgba(42,16,35,.05)}
+.doc.active{background:var(--peach); border-color:var(--peach-deep)}
+.doc.active b{font-weight:600}
+.doc .txt{display:flex; flex-direction:column; line-height:1.35; min-width:0}
+.doc b{font-family:var(--fd); font-weight:500; font-size:13.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.doc small{font-size:11.5px; color:var(--plum-3)}
+.doc.active small{color:var(--plum-2)}
+.side-foot{
+  margin-top:auto; padding-top:14px; border-top:1px dashed var(--line-2);
+  display:flex; align-items:center; gap:10px;
+}
+.side-foot .who{flex:1}
+
+.main{display:flex; flex-direction:column; min-width:0}
+.topbar{
+  display:flex; align-items:center; gap:14px; padding:18px 26px 14px;
+}
+.doc-title{font-family:var(--fd); font-weight:600; font-size:19px; letter-spacing:-.015em; margin:0; flex:1; min-width:0}
+.top-actions{display:flex; align-items:center; gap:10px}
+.saved{display:inline-flex; align-items:center; gap:6px; font-size:12.5px; color:var(--plum-2)}
+.toolbar{
+  margin:0 26px; padding:7px 10px; display:flex; align-items:center; gap:3px;
+  background:var(--cream); border-radius:18px; flex-wrap:wrap;
+}
+.tb-div{width:1px; height:20px; background:var(--line-2); margin:0 7px}
+.tb-btn{
+  min-width:34px; height:34px; padding:0 9px; border-radius:11px; border:none; background:none;
+  color:var(--plum); cursor:pointer; display:inline-flex; align-items:center; justify-content:center; gap:6px;
+  font-family:var(--fd); font-size:13.5px; font-weight:600;
+}
+.tb-btn:hover{background:rgba(42,16,35,.07)}
+.tb-select{font-weight:500; font-size:13px; padding:0 11px}
+
+.canvas{
+  flex:1; display:grid; grid-template-columns:minmax(0,1fr) 244px; gap:22px;
+  padding:22px 26px 40px; align-items:start;
+}
+.page{
+  background:var(--paper); border:1px solid var(--line); border-radius:var(--r-card);
+  box-shadow:var(--shadow); padding:40px 46px 52px; max-width:660px; width:100%;
+}
+.page h1{font-family:var(--fd); font-weight:600; font-size:29px; letter-spacing:-.02em; margin:0 0 14px; line-height:1.15}
+.page h2{font-family:var(--fd); font-weight:600; font-size:19px; letter-spacing:-.01em; margin:26px 0 8px}
+.page p{margin:0 0 12px; font-size:15px; line-height:1.7; color:rgba(42,16,35,.86)}
+.page ul{margin:0 0 14px; padding-left:20px}
+.page li{margin:0 0 5px; font-size:15px; line-height:1.7}
+.page blockquote{
+  margin:18px 0; padding:2px 0 2px 18px; border-left:3px solid var(--rose);
+  color:var(--plum-2); font-style:italic;
+}
+.page pre{
+  background:#241019; color:#F6E3CE; border-radius:14px; padding:14px 18px; overflow:auto;
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12.5px; line-height:1.6; margin:16px 0;
+}
+.page .hi{background:linear-gradient(180deg,transparent 58%, var(--peach) 58%)}
+
+.doodle-col{position:sticky; top:22px; padding-top:6px}
+.doodle{width:100%; color:var(--plum)}
+.doodle-caption{
+  font-family:var(--fd); font-size:12.5px; color:var(--plum-2); text-align:center; margin-top:8px; line-height:1.5;
+}
+@media (max-width:1080px){
+  .canvas{grid-template-columns:minmax(0,1fr)}
+  .doodle-col{display:none}
+}
+
+/* ----------------------------------------------------------------- share */
+.scene{position:relative; background:linear-gradient(180deg,#FCEAC9,#F8DDB4); min-height:660px; overflow:hidden}
+.scene-app{display:grid; grid-template-columns:264px minmax(0,1fr); opacity:.9}
+.scene-side{background:var(--lace); border-right:1px solid var(--line); padding:22px 16px}
+.scene-main{padding:20px 26px}
+.scene-top{display:flex; align-items:center; gap:10px; margin-bottom:16px}
+.scene-line{height:11px; border-radius:999px; background:var(--line-2)}
+.scene-page{
+  background:var(--paper); border:1px solid var(--line); border-radius:var(--r-card);
+  padding:30px 34px; max-width:560px; box-shadow:var(--shadow);
+}
+.scrim{position:absolute; inset:0; background:rgba(42,16,35,.42)}
+.modal{
+  position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+  width:min(560px, calc(100% - 48px)); padding:28px 28px 22px;
+  box-shadow:0 40px 90px -40px rgba(42,16,35,.75);
+}
+.modal-x{position:absolute; top:16px; right:16px}
+.modal h2{font-family:var(--fd); font-weight:600; font-size:20px; letter-spacing:-.015em; margin:0 40px 4px 0}
+.person-list{list-style:none; margin:6px 0 18px; padding:0; display:flex; flex-direction:column; gap:10px}
+.person{display:flex; align-items:center; gap:12px}
+.person .who{flex:1}
+.role-pill{
+  display:inline-flex; align-items:center; gap:6px; font-family:var(--fd); font-size:12.5px;
+  padding:6px 12px; border-radius:999px; border:1.5px solid var(--line-2); color:var(--plum-2); background:var(--paper);
+}
+.invite-row{display:flex; gap:9px; align-items:center}
+.invite-row .input{flex:1}
+.link-row{
+  display:flex; gap:9px; align-items:center; margin-top:14px; padding-top:14px;
+  border-top:1px dashed var(--line-2);
+}
+.link-row .input{flex:1; border-style:dashed}
+.modal-foot{display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:20px}
+.hint{font-size:12.5px; color:var(--plum-3)}
+
+/* ---------------------------------------------------------------- footer */
+.mock-foot{max-width:1300px; margin:0 auto; padding:40px 20px 70px; text-align:center}
+.trust{
+  font-family:var(--fd); font-weight:600; font-size:19px; letter-spacing:-.01em; margin:0 0 26px;
+}
+.logos{display:flex; gap:38px; flex-wrap:wrap; justify-content:center; align-items:center; color:var(--plum)}
+.logos span{opacity:.62}
+.l1{font-family:var(--fd); font-weight:700; font-size:22px; letter-spacing:-.03em}
+.l2{font-family:var(--fd); font-weight:300; font-size:23px; letter-spacing:.06em}
+.l3{font-family:var(--fd); font-weight:600; font-size:19px; text-transform:uppercase; letter-spacing:.01em}
+.l4{font-family:var(--fd); font-weight:700; font-size:21px; font-style:italic}
+.l5{font-family:var(--fd); font-weight:500; font-size:20px; letter-spacing:.04em}
+.colophon{margin:44px auto 0; max-width:520px; color:var(--plum-2); font-size:13.5px}
+.colophon b{font-family:var(--fd); font-weight:600}
+.scallop{display:block; width:100%; height:52px; margin-top:60px; color:var(--canvas-2)}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 16V4M7 9l5-5 5 5M4 17v3h16v-3"/></symbol>
+    <symbol id="i-doc" viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/><path d="M9 12h6M9 16h4"/></symbol>
+    <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-5.4 6-5.4s6 2.1 6 5.4"/><path d="M16.5 5.6a3.2 3.2 0 010 5.8M17 14.9c2.4.5 4 2.5 4 5.1"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></symbol>
+    <symbol id="i-dots" viewBox="0 0 24 24"><circle cx="6" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="18" cy="12" r="1.6"/></symbol>
+    <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="3"/><path d="M15 5.5A2.5 2.5 0 0012.5 3h-6A2.5 2.5 0 004 5.5v6A2.5 2.5 0 006.5 14"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+    <symbol id="i-out" viewBox="0 0 24 24"><path d="M14 4h4a2 2 0 012 2v12a2 2 0 01-2 2h-4M10 8l-4 4 4 4M6 12h9"/></symbol>
+    <symbol id="i-list" viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1.2"/><circle cx="4.5" cy="12" r="1.2"/><circle cx="4.5" cy="18" r="1.2"/></symbol>
+    <symbol id="i-ol" viewBox="0 0 24 24"><path d="M10 6h10M10 12h10M10 18h10M4 5h1v3M4 11.5h2l-2 3h2M4 17h1.6a.9.9 0 010 1.8H4h1.8"/></symbol>
+    <symbol id="i-quote" viewBox="0 0 24 24"><path d="M9 6c-2.8 0-4.5 2-4.5 4.5S6 15 8.5 15c.4 0 .8 0 1-.1-.5 1.6-1.8 2.6-3.5 3.1M19 6c-2.8 0-4.5 2-4.5 4.5S16 15 18.5 15c.4 0 .8 0 1-.1-.5 1.6-1.8 2.6-3.5 3.1"/></symbol>
+    <symbol id="i-code" viewBox="0 0 24 24"><path d="M9 8l-4 4 4 4M15 8l4 4-4 4"/></symbol>
+    <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 13.5a4 4 0 005.7 0l3-3a4 4 0 10-5.7-5.7L11.5 6.4"/><path d="M14 10.5a4 4 0 00-5.7 0l-3 3a4 4 0 105.7 5.7l1.5-1.4"/></symbol>
+    <symbol id="i-image" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="14" rx="3"/><circle cx="9" cy="10" r="1.5"/><path d="M4 17l5-5 4 4 3-2 4 3"/></symbol>
+    <symbol id="i-undo" viewBox="0 0 24 24"><path d="M9 7L5 11l4 4"/><path d="M5 11h8.5a5.5 5.5 0 010 11H12"/></symbol>
+    <symbol id="i-redo" viewBox="0 0 24 24"><path d="M15 7l4 4-4 4"/><path d="M19 11h-8.5a5.5 5.5 0 000 11H12"/></symbol>
+    <symbol id="i-chev" viewBox="0 0 24 24"><path d="M6 9.5l6 5.5 6-5.5"/></symbol>
+    <symbol id="i-userplus" viewBox="0 0 24 24"><circle cx="10" cy="8" r="3.4"/><path d="M3.5 20c0-3.4 2.9-5.6 6.5-5.6 1.2 0 2.3.2 3.2.7"/><path d="M18 14v6M15 17h6"/></symbol>
+  </defs>
+</svg>
+
+<div class="wrap">
+
+<header class="mock-head">
+  <span class="eyebrow">Static mockup · not the live app</span>
+  <h1>Ajaia Docs, in a warmer key.</h1>
+  <p class="lede">The same three screens as the shipped app — sign in, editor, share — reskinned from Apple liquid&nbsp;glass to a peach-and-plum, hand-drawn system in the spirit of the Officevibe reference.</p>
+  <nav class="jump">
+    <a href="#signin">01 · Sign in</a>
+    <a href="#editor">02 · Editor</a>
+    <a href="#share">03 · Share</a>
+  </nav>
+</header>
+
+<!-- ============================================================ 01 SIGN IN -->
+<section class="screen" id="signin">
+  <div class="screen-label">
+    <span class="n">01</span><span class="t">Sign in</span>
+    <span class="d">seeded accounts, peach canvas, plum pills</span>
+  </div>
+  <div class="frame">
+    <div class="frame-bar">
+      <span class="fdot"></span><span class="fdot"></span><span class="fdot"></span>
+      <div class="url-pill">ajaia.dev</div>
+    </div>
+    <div class="app-signin">
+      <div class="signin-wrap">
+        <div class="brand">
+          <span class="brand-mark">a</span>
+          <div>
+            <div class="brand-name">ajaia</div>
+            <div class="brand-tag">Collaborative documents, kept small.</div>
+          </div>
+        </div>
+
+        <div class="card signin-card">
+          <h2 class="card-title">Sign in</h2>
+          <p class="card-sub">This demo uses seeded accounts instead of passwords. Pick one to continue.</p>
+          <ul class="account-list">
+            <li class="account">
+              <span class="avatar av-plum">A</span>
+              <span class="who"><b>Alessio</b><small>alessio@linux.com</small></span>
+              <button class="btn btn-ghost">Sign in</button>
+            </li>
+            <li class="account">
+              <span class="avatar av-rose">MC</span>
+              <span class="who"><b>Maya Chen</b><small>maya@ajaia.dev</small></span>
+              <button class="btn btn-ghost">Sign in</button>
+            </li>
+            <li class="account">
+              <span class="avatar av-moss">ST</span>
+              <span class="who"><b>Sam Torres</b><small>sam@ajaia.dev</small></span>
+              <button class="btn btn-ghost">Sign in</button>
+            </li>
+          </ul>
+          <div class="rule">or use an email</div>
+          <div class="signin-row">
+            <div class="input"><input class="input-plain" style="border:none;background:none;outline:none;width:100%" placeholder="you@example.com"></div>
+            <button class="btn btn-primary">Go</button>
+          </div>
+        </div>
+
+        <p class="footnote">Sessions are mocked on purpose — see the README for the security model.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================= 02 EDITOR -->
+<section class="screen" id="editor">
+  <div class="screen-label">
+    <span class="n">02</span><span class="t">Editor</span>
+    <span class="d">lace sidebar, peach canvas, cream page, drawn mascot</span>
+  </div>
+  <div class="frame">
+    <div class="frame-bar">
+      <span class="fdot"></span><span class="fdot"></span><span class="fdot"></span>
+      <div class="url-pill">ajaia.dev/docs/welcome-to-ajaia-docs</div>
+    </div>
+    <div class="app-editor">
+
+      <aside class="side">
+        <div class="side-brand">
+          <span class="brand-mark">a</span>
+          <span class="brand-name">ajaia</span>
+        </div>
+        <button class="btn btn-primary btn-block"><svg class="i"><use href="#i-plus"/></svg>New document</button>
+        <button class="btn btn-quiet btn-block"><svg class="i"><use href="#i-upload"/></svg>Import file</button>
+
+        <div class="input side-search"><svg class="i i-sm"><use href="#i-search"/></svg><input class="input-plain" style="border:none;background:none;outline:none;width:100%" placeholder="Search"></div>
+
+        <div class="side-label">My documents</div>
+        <ul class="doc-list">
+          <li><a class="doc active" href="#editor"><svg class="i i-sm"><use href="#i-doc"/></svg><span class="txt"><b>Welcome to Ajaia Docs</b><small>just now</small></span></a></li>
+          <li><a class="doc" href="#editor"><svg class="i i-sm"><use href="#i-doc"/></svg><span class="txt"><b>Q3 Product Notes</b><small>6m ago</small></span></a></li>
+          <li><a class="doc" href="#editor"><svg class="i i-sm"><use href="#i-doc"/></svg><span class="txt"><b>Hiring loop checklist</b><small>yesterday</small></span></a></li>
+        </ul>
+
+        <div class="side-label">Shared with me</div>
+        <ul class="doc-list">
+          <li><a class="doc" href="#editor"><svg class="i i-sm"><use href="#i-doc"/></svg><span class="txt"><b>Roadmap draft</b><small>Sam Torres · can edit</small></span></a></li>
+        </ul>
+
+        <div class="side-foot">
+          <span class="avatar av-plum2">A</span>
+          <span class="who"><b>Alessio</b><small>alessio@linux.com</small></span>
+          <button class="icon-btn"><svg class="i"><use href="#i-out"/></svg></button>
+        </div>
+      </aside>
+
+      <main class="main">
+        <header class="topbar">
+          <h1 class="doc-title">Welcome to Ajaia Docs</h1>
+          <div class="top-actions">
+            <span class="chip">Owner</span>
+            <span class="saved"><svg class="i i-sm"><use href="#i-check"/></svg>Saved</span>
+            <button class="btn btn-primary"><svg class="i i-sm"><use href="#i-users"/></svg>Share</button>
+            <button class="icon-btn"><svg class="i"><use href="#i-dots"/></svg></button>
+          </div>
+        </header>
+
+        <div class="toolbar">
+          <button class="tb-btn"><b>B</b></button>
+          <button class="tb-btn" style="font-style:italic">I</button>
+          <button class="tb-btn" style="text-decoration:underline">U</button>
+          <button class="tb-btn" style="text-decoration:line-through">S</button>
+          <span class="tb-div"></span>
+          <button class="tb-btn tb-select">Aa&nbsp; Body <svg class="i i-sm"><use href="#i-chev"/></svg></button>
+          <span class="tb-div"></span>
+          <button class="tb-btn"><svg class="i"><use href="#i-list"/></svg></button>
+          <button class="tb-btn"><svg class="i"><use href="#i-ol"/></svg></button>
+          <button class="tb-btn"><svg class="i"><use href="#i-quote"/></svg></button>
+          <button class="tb-btn"><svg class="i"><use href="#i-code"/></svg></button>
+          <span class="tb-div"></span>
+          <button class="tb-btn"><svg class="i"><use href="#i-link"/></svg></button>
+          <button class="tb-btn"><svg class="i"><use href="#i-image"/></svg></button>
+          <span class="tb-div"></span>
+          <button class="tb-btn"><svg class="i"><use href="#i-undo"/></svg></button>
+          <button class="tb-btn" style="opacity:.4"><svg class="i"><use href="#i-redo"/></svg></button>
+        </div>
+
+        <div class="canvas">
+          <article class="page">
+            <h1>Welcome to Ajaia Docs</h1>
+            <p>Ajaia Docs is a deliberately small collaborative editor: one focused slice of the Google Docs surface, built end to end — editor, persistence, sharing and deployment.</p>
+
+            <h2>What works today</h2>
+            <ul>
+              <li><b>Rich text</b> with bold, italic, underline, headings, lists and block quotes.</li>
+              <li><b>Autosave</b> — every keystroke is persisted, so a refresh never loses work.</li>
+              <li><b>File import</b> from <code>.md</code>, <code>.txt</code> and <code>.docx</code>.</li>
+              <li><b>Sharing</b> with an owner, an editor and a viewer role.</li>
+            </ul>
+
+            <blockquote>Everything in this demo is mocked auth on purpose — see the README for the exact model.</blockquote>
+
+            <pre><code>ajaia docs share --doc 9f2c --email maya@ajaia.dev --role editor</code></pre>
+
+            <p>Formatted <b>live:bold</b>, <i>italic</i> and <span class="hi">underlined</span> — the last one wears the reference's highlighter.</p>
+          </article>
+
+          <div class="doodle-col">
+            <svg class="doodle" viewBox="0 0 300 270" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-label="Hand-drawn desk doodle">
+              <defs>
+                <pattern id="dots" width="7" height="7" patternUnits="userSpaceOnUse">
+                  <circle cx="2" cy="2" r="1.15" fill="currentColor"/>
+                </pattern>
+              </defs>
+
+              <!-- halftone wash -->
+              <path d="M22 104C14 66 46 26 90 22c40-4 62 30 56 68-6 38-40 66-78 62-30-3-44-20-46-48z" fill="url(#dots)" stroke="none" opacity=".45"/>
+
+              <!-- speech bubble -->
+              <path d="M206 26h72a16 16 0 0116 16v34a16 16 0 01-16 16h-40l-18 16v-16h-14a16 16 0 01-16-16V42a16 16 0 0116-16z" fill="var(--cream)"/>
+              <circle cx="232" cy="59" r="4.4" fill="var(--plum)" stroke="none"/>
+              <circle cx="252" cy="59" r="4.4" fill="var(--plum)" stroke="none"/>
+              <circle cx="272" cy="59" r="4.4" fill="var(--plum)" stroke="none"/>
+
+              <!-- paper -->
+              <g transform="rotate(-6 78 152)">
+                <rect x="26" y="82" width="106" height="146" rx="13" fill="var(--cream)"/>
+                <path d="M46 112h66M46 134h66M46 156h42"/>
+                <circle cx="58" cy="190" r="13" fill="var(--peach)"/>
+                <path d="M52 190l4.5 4.5L65 184" stroke-width="2.4"/>
+                <path d="M80 190h38"/>
+              </g>
+
+              <!-- pencil -->
+              <path d="M142 246l14-18 84-84 16 16-84 84z" fill="var(--peach)"/>
+              <path d="M156 228l14 14-18 8z" fill="var(--cream)"/>
+              <path d="M240 144l16-16 16 16-16 16z" fill="var(--cream)"/>
+              <path d="M162 252l8-10" stroke-width="2.4"/>
+
+              <!-- mug -->
+              <path d="M64 208h56v34a14 14 0 01-14 14H78a14 14 0 01-14-14z" fill="var(--cream)"/>
+              <path d="M120 216h12a13 13 0 010 26h-12" fill="var(--cream)"/>
+              <path d="M82 194c-7-8 7-13 0-22M100 194c-7-8 7-13 0-22"/>
+
+              <!-- plant -->
+              <path d="M238 214h44l-5 30a6 6 0 01-6 5h-22a6 6 0 01-6-5z" fill="var(--cream)"/>
+              <path d="M260 214c0-22-12-30-12-30M260 214c0-26 16-32 16-32M260 214c-2-14-2-30 2-42"/>
+              <path d="M236 182c-10-3-16-12-15-22 11-1 21 6 23 16M266 180c10-4 15-13 14-23-11 0-20 7-22 17"/>
+
+              <!-- sparkles -->
+              <path d="M156 62c1.5 8 3 9.5 11 11-8 1.5-9.5 3-11 11-1.5-8-3-9.5-11-11 8-1.5 9.5-3 11-11z"/>
+              <path d="M286 118c1 5.5 2 6.5 7.5 7.5-5.5 1-6.5 2-7.5 7.5-1-5.5-2-6.5-7.5-7.5 5.5-1 6.5-2 7.5-7.5z"/>
+            </svg>
+            <p class="doodle-caption">Drawn by hand, on purpose.<br>Nothing here was imported.</p>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================== 03 SHARE -->
+<section class="screen" id="share">
+  <div class="screen-label">
+    <span class="n">03</span><span class="t">Share dialog</span>
+    <span class="d">cream modal, plum scrim, dashed link field</span>
+  </div>
+  <div class="frame">
+    <div class="frame-bar">
+      <span class="fdot"></span><span class="fdot"></span><span class="fdot"></span>
+      <div class="url-pill">ajaia.dev/docs/welcome-to-ajaia-docs</div>
+    </div>
+    <div class="scene">
+      <div class="scene-app">
+        <div class="scene-side">
+          <div class="side-brand">
+            <span class="brand-mark">a</span>
+            <span class="brand-name">ajaia</span>
+          </div>
+          <div class="scene-line" style="width:70%"></div>
+          <div class="scene-line" style="width:50%"></div>
+          <div class="scene-line" style="width:60%"></div>
+        </div>
+        <div class="scene-main">
+          <div class="scene-top">
+            <div class="scene-line" style="width:180px"></div>
+            <div class="scene-line" style="width:60px"></div>
+          </div>
+          <div class="scene-page">
+            <div class="scene-line" style="width:45%;height:18px;background:var(--plum-3)"></div>
+            <div style="height:14px"></div>
+            <div class="scene-line" style="width:100%"></div>
+            <div class="scene-line" style="width:92%"></div>
+            <div class="scene-line" style="width:70%"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="scrim"></div>
+
+      <div class="modal card">
+        <button class="icon-btn modal-x"><svg class="i"><use href="#i-x"/></svg></button>
+        <h2>Share “Welcome to Ajaia Docs”</h2>
+        <p class="card-sub">Invite teammates to read or edit this document.</p>
+
+        <ul class="person-list">
+          <li class="person">
+            <span class="avatar av-plum2">A</span>
+            <span class="who"><b>Alessio</b><small>alessio@linux.com</small></span>
+            <span class="role-pill">Owner</span>
+          </li>
+          <li class="person">
+            <span class="avatar av-rose">MC</span>
+            <span class="who"><b>Maya Chen</b><small>maya@ajaia.dev</small></span>
+            <span class="role-pill">Can edit <svg class="i i-sm"><use href="#i-chev"/></svg></span>
+          </li>
+          <li class="person">
+            <span class="avatar av-moss">ST</span>
+            <span class="who"><b>Sam Torres</b><small>sam@ajaia.dev</small></span>
+            <span class="role-pill">Can view <svg class="i i-sm"><use href="#i-chev"/></svg></span>
+          </li>
+        </ul>
+
+        <div class="invite-row">
+          <div class="input"><svg class="i i-sm"><use href="#i-userplus"/></svg><input class="input-plain" style="border:none;background:none;outline:none;width:100%" placeholder="Email or name"></div>
+          <span class="role-pill">Can edit <svg class="i i-sm"><use href="#i-chev"/></svg></span>
+          <button class="btn btn-primary">Invite</button>
+        </div>
+
+        <div class="link-row">
+          <div class="input"><svg class="i i-sm"><use href="#i-link"/></svg><span class="input-plain" style="color:var(--plum-2)">ajaia.dev/doc/9f2c4a</span></div>
+          <button class="btn btn-ghost"><svg class="i i-sm"><use href="#i-copy"/></svg>Copy link</button>
+        </div>
+
+        <div class="modal-foot">
+          <span class="hint">Only invited people can open this document.</span>
+          <button class="btn btn-primary">Done</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="mock-foot">
+  <p class="trust">Trusted by teams who like things small.</p>
+  <div class="logos">
+    <span class="l1">northwind</span>
+    <span class="l2">kettle&amp;co</span>
+    <span class="l3">Lumen</span>
+    <span class="l4">Fieldnotes</span>
+    <span class="l5">atelier nine</span>
+  </div>
+  <p class="colophon">
+    <b>Ajaia Docs</b> is the real product — Cloudflare&nbsp;Workers, D1, React and TipTap.
+    This file is a look-and-feel mockup only: static, offline-capable apart from one Google&nbsp;Fonts link,
+    and it changes nothing in the app.
+  </p>
+</footer>
+
+<svg class="scallop" viewBox="0 0 1200 52" preserveAspectRatio="none" aria-hidden="true">
+  <path d="M0 52V26a26 26 0 0152 0v26z" fill="currentColor"/>
+  <path d="M52 52V26a26 26 0 0152 0v26z" fill="currentColor"/>
+  <path d="M104 52V26a26 26 0 0152 0v26z" fill="currentColor"/>
+  <path d="M156 52V26a26 26 0 0152 0v26z" fill="currentColor"/>
+  <path d="M208 52V26a26 26 0 0152 0v26z" fill="currentColor"/>
+  <path d="M260 52V26a26 26 0 0152 0v26z" fill="currentColor"/>
+  <path d="M312 52V26a26 26 0 0152 0v26z" fill="currentColor"/>
+  <path d="M364 52V26a26 26 0 0152 0v26z" fill="currentColor"/>
+  <path d="M416 52V26a26 26 0 0152 0v26z" fill="currentColor"/>
+  <path d="M468 52V26a26 26 0 0152 0v26z" fill="currentColor"/>
+  <path d="M520 52V26a26 26 0 0152 0v26z" fill="currentColor"/>
+  <path d="M572 52V26a26 26 0 0152 0v26z" fill="currentColor"/>
+  <path d="M624 52V26a26 26 0 0152 0v26z" fill="currentColor"/>
+  <path d="M676 52V26a26 26 0 0152 0v26z" fill="currentColor"/>
+  <path d="M728 52V26a26 26 0 0152 0v26z" fill="currentColor"/>
+  <path d="M780 52V26a26 26 0 0152 0v26z" fill="currentColor"/>
+  <path d="M832 52V26a26 26 0 0152 0v26z" fill="currentColor"/>
+  <path d="M884 52V26a26 26 0 0152 0v26z" fill="currentColor"/>
+  <path d="M936 52V26a26 26 0 0152 0v26z" fill="currentColor"/>
+  <path d="M988 52V26a26 26 0 0152 0v26z" fill="currentColor"/>
+  <path d="M1040 52V26a26 26 0 0152 0v26z" fill="currentColor"/>
+  <path d="M1092 52V26a26 26 0 0152 0v26z" fill="currentColor"/>
+  <path d="M1144 52V26a26 26 0 0152 0v26z" fill="currentColor"/>
+</svg>
+
+</div>
+</body>
+</html>

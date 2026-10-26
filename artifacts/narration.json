@@ -1,0 +1,62 @@
+[
+  {
+    "startMs": 2945,
+    "text": "This is Ajaia Docs, a lightweight collaborative document editor. Sign in is mocked with seeded accounts, so there are no passwords to remember."
+  },
+  {
+    "startMs": 9914,
+    "text": "Signed in as Alessio. The sidebar separates my documents from documents shared with me, and everything comes from a Cloudflare D1 database."
+  },
+  {
+    "startMs": 14999,
+    "text": "Documents persist across reloads. Formatting is stored as semantic HTML, so bold, headings and lists survive a refresh."
+  },
+  {
+    "startMs": 21039,
+    "text": "Inline formatting works from the toolbar or with keyboard shortcuts. I am typing bold, italic and underline now, and each change autosaves."
+  },
+  {
+    "startMs": 25421,
+    "text": "Text styles live behind a single Format menu, which is how Apple's own apps group them."
+  },
+  {
+    "startMs": 30985,
+    "text": "Lists, quotes and code blocks are one click away, and the toolbar always reflects the current block type."
+  },
+  {
+    "startMs": 37848,
+    "text": "Creating a document takes one click. I rename it inline, type a line, and autosave persists it to the database."
+  },
+  {
+    "startMs": 47941,
+    "text": "Here is the proof. I reload the page, and the content comes straight back from D1, because every edit was already saved."
+  },
+  {
+    "startMs": 58293,
+    "text": "File import turns a markdown file into a new editable document. Parsing happens in the browser and the result is sanitised before it is stored."
+  },
+  {
+    "startMs": 67402,
+    "text": "Sharing is the core of the product. The owner invites a teammate by email and chooses either editor or viewer access."
+  },
+  {
+    "startMs": 78845,
+    "text": "Switching accounts shows the sharing model from the other side. Maya now sees the document under Shared with me."
+  },
+  {
+    "startMs": 84993,
+    "text": "Maya opens the shared document. Her role is Can edit, so she can change the content just like the owner."
+  },
+  {
+    "startMs": 98752,
+    "text": "The interface follows Apple's Human Interface Guidelines, including dark mode, which follows the system appearance setting."
+  },
+  {
+    "startMs": 109507,
+    "text": "Any document can be exported as Markdown or plain text from this menu."
+  },
+  {
+    "startMs": 116642,
+    "text": "That is the full walkthrough. The app is live on Cloudflare Workers, and the source, architecture notes and AI workflow notes are in the readme."
+  }
+]

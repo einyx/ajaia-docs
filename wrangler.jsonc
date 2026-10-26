@@ -1,0 +1,29 @@
+{
+  "name": "ajaia-docs",
+  "main": "src/server/worker.ts",
+  "account_id": "2b507c00d9b7ba9d7f64d6de1a3ce78e",
+  "compatibility_date": "2026-10-01",
+  "compatibility_flags": ["nodejs_compat"],
+
+  // Static SPA bundle (Vite output). `single-page-application` makes unknown
+  // paths fall back to index.html so client-side routing keeps working.
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application"
+  },
+
+  // SQLite on Cloudflare D1. Created with: wrangler d1 create ajaia
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "ajaia",
+      "database_id": "f1e2727f-60d5-4b1f-92bd-0f08272b7b82",
+      "migrations_dir": "migrations"
+    }
+  ],
+
+  "observability": {
+    "enabled": true
+  }
+}
