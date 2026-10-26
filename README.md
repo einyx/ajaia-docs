@@ -71,6 +71,19 @@ npm run deploy                        # vite build + wrangler deploy
 `wrangler.jsonc` pins the D1 database id. To point at your own account, change `account_id`
 and `database_id` (create the database with `npx wrangler d1 create ajaia`).
 
+### Deployment paths
+
+| Path | When | Command |
+| --- | --- | --- |
+| **Cloudflare Workers + D1** (primary) | The product's home. No servers, no containers, one deploy command. | `npm run db:migrate:remote && npm run deploy` |
+| **Node standalone** | Run it on any machine or VM; same app, local SQLite file. | `npm run build && npm run serve` |
+| **Docker / Compose** | Same as above, containerised. | `docker compose up --build` |
+| **Kubernetes** | Cluster fallback: plain manifests in `deploy/k8s/`. | `kubectl apply -f deploy/k8s/` |
+
+There is deliberately **no Helm chart**: the primary deployment has no Kubernetes objects at all
+(Workers is a managed runtime, D1 a managed database), so a chart would template a deployment
+that does not exist. `deploy/k8s/README.md` explains when a chart would start to earn its keep.
+
 ---
 
 ## What it does
@@ -189,7 +202,8 @@ src/client/     React SPA (editor, sidebar, share sheet, login)
 src/server/     Hono app, storage adapter, SQL repository, seeding
 src/shared/     Types and constants shared by both sides
 migrations/     D1 / SQLite schema
-scripts/        dev runner, walkthrough recorder, submission packaging
+deploy/k8s/     Optional Kubernetes fallback (plain manifests, no Helm chart)
+scripts/        dev runner, walkthrough recorder, narration, diagram renderer, packaging
 tests/          vitest suite over the API
 ```
 

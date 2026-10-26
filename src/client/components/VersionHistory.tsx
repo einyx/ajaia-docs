@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ArrowCounterClockwise, X } from '@phosphor-icons/react';
+import { ArrowCounterClockwise, ArrowsLeftRight, X } from '@phosphor-icons/react';
 import type { DocumentDetail, VersionEntry } from '../../shared/types.ts';
 import { api, ApiError } from '../api.ts';
+import { diffText, htmlToText, type DiffPart } from '../lib/diff.ts';
 import { relativeTime } from '../lib/format.ts';
 import { Avatar } from './Avatar.tsx';
 
@@ -11,15 +12,55 @@ interface VersionHistoryProps {
   onRestored: (doc: DocumentDetail) => void;
 }
 
+/** The word-level diff between a snapshot and the document as it is now. */
+function DiffView({ parts, loading }: { parts?: DiffPart[]; loading: boolean }) {
+  if (loading) {
+    return <p className="mt-2 text-caption text-label-secondary">Comparing with the current document…</p>;
+  }
+  if (!parts) return null;
+
+  const added = parts.filter((part) => part.type === 'added').reduce((n, part) => n + part.text.length, 0);
+  const removed = parts.filter((part) => part.type === 'removed').reduce((n, part) => n + part.text.length, 0);
+
+  return (
+    <div className="mt-2 rounded-control bg-bg-primary/60 p-2">
+      <p className="mb-1 text-caption text-label-secondary">
+        Changed since this version: <span className="text-success">+{added}</span>{' '}
+        <span className="text-destructive">−{removed}</span> characters
+      </p>
+      <div className="thin-scrollbar max-h-56 overflow-y-auto whitespace-pre-wrap break-words text-subhead">
+        {parts.map((part, index) => (
+          <span
+            key={index}
+            className={
+              part.type === 'added'
+                ? 'bg-success/15 text-success'
+                : part.type === 'removed'
+                  ? 'bg-destructive/15 text-destructive line-through'
+                  : 'text-label-secondary'
+            }
+          >
+            {part.text}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 /** Snapshot history for one document: what changed, when, and who changed it. */
 export function VersionHistory({ doc, onClose, onRestored }: VersionHistoryProps) {
   const [versions, setVersions] = useState<VersionEntry[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<number | null>(null);
+  const [diffFor, setDiffFor] = useState<number | null>(null);
+  const [diffs, setDiffs] = useState<Record<number, DiffPart[]>>({});
+  const [diffLoading, setDiffLoading] = useState<number | null>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
 
   const canRestore = doc.role === 'owner' || doc.role === 'editor';
+  const currentText = htmlToText(doc.content);
 
   const load = useCallback(async () => {
     try {
@@ -65,6 +106,30 @@ export function VersionHistory({ doc, onClose, onRestored }: VersionHistoryProps
       setError(err instanceof ApiError ? err.message : 'Could not restore that version.');
     } finally {
       setBusyId(null);
+    }
+  }
+
+  /** Show what changed between a snapshot and the document as it is now. */
+  async function showChanges(version: VersionEntry) {
+    if (diffFor === version.id) {
+      setDiffFor(null);
+      return;
+    }
+
+    setDiffFor(version.id);
+    setError(null);
+    if (diffs[version.id]) return;
+
+    setDiffLoading(version.id);
+    try {
+      const { version: full } = await api.getVersion(doc.id, version.id);
+      const parts = diffText(htmlToText(full.content), currentText);
+      setDiffs((current) => ({ ...current, [version.id]: parts }));
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not compare that version.');
+      setDiffFor(null);
+    } finally {
+      setDiffLoading(null);
     }
   }
 
@@ -117,21 +182,37 @@ export function VersionHistory({ doc, onClose, onRestored }: VersionHistoryProps
                     </p>
                     <p className="truncate text-caption text-label-secondary">{relativeTime(version.createdAt)}</p>
                   </div>
-                  {canRestore ? (
+                  <div className="flex shrink-0 items-center gap-1">
                     <button
                       type="button"
-                      disabled={busyId !== null}
-                      onClick={() => void restore(version)}
-                      aria-label={`Restore the version from ${relativeTime(version.createdAt)}`}
+                      disabled={diffLoading !== null && diffLoading !== version.id}
+                      onClick={() => void showChanges(version)}
+                      aria-expanded={diffFor === version.id}
+                      aria-label={`Show changes since the version from ${relativeTime(version.createdAt)}`}
                       className="flex items-center gap-1 rounded-control px-2 py-1 text-caption font-medium text-accent transition hover:bg-fill-tertiary disabled:opacity-40"
                     >
-                      <ArrowCounterClockwise size={14} />
-                      Restore
+                      <ArrowsLeftRight size={14} />
+                      Changes
                     </button>
-                  ) : null}
+                    {canRestore ? (
+                      <button
+                        type="button"
+                        disabled={busyId !== null}
+                        onClick={() => void restore(version)}
+                        aria-label={`Restore the version from ${relativeTime(version.createdAt)}`}
+                        className="flex items-center gap-1 rounded-control px-2 py-1 text-caption font-medium text-accent transition hover:bg-fill-tertiary disabled:opacity-40"
+                      >
+                        <ArrowCounterClockwise size={14} />
+                        Restore
+                      </button>
+                    ) : null}
+                  </div>
                 </div>
                 {version.excerpt ? (
                   <p className="mt-1.5 line-clamp-2 text-subhead text-label-secondary">{version.excerpt}</p>
+                ) : null}
+                {diffFor === version.id ? (
+                  <DiffView parts={diffs[version.id]} loading={diffLoading === version.id} />
                 ) : null}
               </li>
             ))}

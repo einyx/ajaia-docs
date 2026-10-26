@@ -418,4 +418,29 @@ describe('version history', () => {
     });
     expect(restore.status).toBe(403);
   });
+
+  it('serves one snapshot to anyone with access, and to nobody else', async () => {
+    const alice = await signIn(ALICE);
+    const maya = await signIn(MAYA);
+    const doc = await createDoc(alice, 'Snapshot access');
+    await patchDoc(alice, doc.id, '<p>snapshot body</p>');
+
+    const versions = await listVersions(alice, doc.id);
+
+    const read = await app.request(`/api/documents/${doc.id}/versions/${versions[0].id}`, {
+      headers: { Cookie: alice },
+    });
+    expect(read.status).toBe(200);
+    expect((await read.json()).version.content).toBe('<p>snapshot body</p>');
+
+    const denied = await app.request(`/api/documents/${doc.id}/versions/${versions[0].id}`, {
+      headers: { Cookie: maya },
+    });
+    expect(denied.status).toBe(403);
+
+    const missing = await app.request(`/api/documents/${doc.id}/versions/999999`, {
+      headers: { Cookie: alice },
+    });
+    expect(missing.status).toBe(404);
+  });
 });

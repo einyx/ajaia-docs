@@ -183,8 +183,9 @@ export function EditorPane({
   return (
     <div className="flex h-full flex-col">
       <div className="px-2.5 pt-2.5">
-        <div className="glass overflow-hidden rounded-panel">
-          <header className="flex items-center gap-2 px-3 py-2">
+        <div className="glass rounded-panel">
+          {/* Left padding on narrow screens leaves room for the floating nav button. */}
+          <header className="flex items-center gap-2 py-2 pl-12 pr-3 md:pl-3 md:pr-3">
             <input
               value={title}
               onChange={(event) => setTitle(event.target.value)}

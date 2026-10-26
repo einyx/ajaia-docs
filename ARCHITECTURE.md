@@ -25,28 +25,67 @@ offline editing.
 
 ## 2. Shape of the system
 
-```
-┌──────────────────────────── browser ────────────────────────────┐
-│  React 19 + Vite + Tailwind v4 + TipTap                          │
-│  ├─ Sidebar (glass nav layer)   ├─ Editor (opaque page canvas)   │
-│  ├─ Share sheet (glass)         ├─ Format menu (glass popover)  │
-│  └─ Import pipeline: marked / mammoth → DOMPurify → editor JSON  │
-└───────────────────────────────┬─────────────────────────────────┘
-                                │ same-origin fetch, HttpOnly cookie
-┌───────────────────────────────▼─────────────────────────────────┐
-│  Cloudflare Worker (Hono)                                       │
-│  /api/auth/*   session cookie, no passwords (mocked)            │
-│  /api/documents/*  CRUD + role checks                            │
-│  /api/documents/:id/shares/*  grant / change / revoke            │
-│  /api/documents/:id/versions/*  list / restore snapshots        │
-│  storage adapter ──► D1 (SQLite)  |  static assets ──► SPA      │
-└─────────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart LR
+  subgraph browser["Browser — React 19 · Vite · Tailwind v4 · TipTap"]
+    direction TB
+    editor["Editor page<br/><i>opaque canvas — content layer</i>"]
+    chrome["Sidebar · toolbar · sheets<br/><i>Liquid Glass — navigation layer</i>"]
+    importer["Import pipeline<br/>marked · mammoth · DOMPurify"]
+    importer --> editor
+    editor <--> chrome
+  end
+
+  subgraph worker["Cloudflare Worker — Hono"]
+    direction TB
+    auth["/api/auth/*<br/>mocked sessions"]
+    docs["/api/documents/*<br/>CRUD + role checks"]
+    shares["…/shares/*<br/>grant · change · revoke"]
+    versions["…/versions/*<br/>list · restore snapshots"]
+    auth --- docs
+    docs --- shares
+    docs --- versions
+  end
+
+  db[("D1 (SQLite)<br/>users · sessions · documents<br/>document_shares · document_versions")]
+  assets[["Static assets binding<br/>Vite SPA + walkthrough.mp4"]]
+
+  browser -- "fetch + HttpOnly cookie" --> worker
+  worker -- "SQL" --> db
+  worker -- "SPA fallback" --> assets
 ```
 
 Two backends, one code path. `src/server/db.ts` exposes a three-method interface
 (`all` / `first` / `run`); the D1 adapter and the `node:sqlite` adapter implement it, and all
 SQL uses positional `?` parameters so the exact same statements run in both places. That is why
 the test suite can exercise the real application code against an in-memory database.
+
+> Static render of the same diagram: [`docs/architecture.svg`](docs/architecture.svg)
+> (regenerate with `node scripts/render-diagram.mjs`).
+
+### The authorisation path, end to end
+
+Every write takes the same route through the system:
+
+```mermaid
+sequenceDiagram
+  participant U as User
+  participant W as Worker (Hono)
+  participant D as D1
+  U->>W: PATCH /api/documents/:id { content }
+  W->>D: session → user
+  W->>D: SELECT document
+  W->>D: SELECT share for user
+  alt owner or editor
+    W->>D: UPDATE documents (+ snapshot version)
+    W-->>U: 200 { updatedAt }
+  else viewer
+    W-->>U: 403 read_only
+  else not shared
+    W-->>U: 403 forbidden
+  end
+```
+
 
 ## 3. Data model
 
@@ -179,6 +218,12 @@ character-level diff — only a text preview of each snapshot.
   documents exactly what would be needed for real auth.
 - **D1 over Postgres** — the data model is five small tables with no joins that need a real
   planner; D1 removes an entire class of deployment work. The `Db` interface keeps the door open.
+- **One primary deployment, one fallback** — Cloudflare Workers + D1 is the product's home: no
+  servers, no containers, one command to ship. Because "run it somewhere else" is a reasonable
+  request, the same app also runs on Node (`src/server/standalone.ts`) and ships as a Docker
+  image, with plain Kubernetes manifests in `deploy/k8s/`. There is deliberately no Helm chart:
+  a chart would template a deployment that does not exist, and the fallback is a convenience,
+  not the product's architecture.
 - **Snapshots over diffs** — a version stores the whole content instead of a patch. Storage is
   worse and the restore is simpler, but a diff format needs a base version, a merge rule and a
   diff library; a snapshot needs none of those, and it cannot drift out of sync with the

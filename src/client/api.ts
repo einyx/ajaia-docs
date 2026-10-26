@@ -5,6 +5,7 @@ import type {
   ShareEntry,
   ShareRole,
   User,
+  VersionDetail,
   VersionEntry,
 } from '../shared/types.ts';
 
@@ -78,6 +79,8 @@ export const api = {
     request<{ shares: ShareEntry[] }>(`/api/documents/${id}/shares/${userId}`, { method: 'DELETE' }),
 
   listVersions: (id: string) => request<{ versions: VersionEntry[] }>(`/api/documents/${id}/versions`),
+  getVersion: (id: string, versionId: number) =>
+    request<{ version: VersionDetail }>(`/api/documents/${id}/versions/${versionId}`),
   restoreVersion: (id: string, versionId: number) =>
     request<{ document: DocumentDetail }>(`/api/documents/${id}/versions/${versionId}/restore`, {
       method: 'POST',

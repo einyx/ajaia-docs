@@ -194,7 +194,17 @@ await page.keyboard.type('A block quote, styled like Apple system typography.', 
 await settle(page, 600);
 await shot('06-lists-quote');
 
-// ------------------------------------------------------------- 8. new doc --
+// ----------------------------------------------------------- 8. history --
+await speak(page, 'history');
+await page.getByRole('button', { name: 'Document menu' }).click();
+await wait(page, 1500);
+await page.getByRole('menuitem', { name: 'Version history' }).click();
+await wait(page, 2500);
+await shot('07-version-history');
+await page.getByRole('button', { name: 'Close version history' }).click();
+await settle(page, 300);
+
+// ------------------------------------------------------------- 9. new doc --
 await speak(page, 'new-doc');
 await page.getByRole('button', { name: 'New document' }).click();
 await page.waitForTimeout(2500);

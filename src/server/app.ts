@@ -53,6 +53,21 @@ function toPublicUser(user: { id: number; name: string; email: string; color: st
   return { id: user.id, name: user.name, email: user.email, color: user.color };
 }
 
+function toVersionAuthor(version: {
+  user_id: number | null;
+  name?: string | null;
+  email?: string | null;
+  color?: string | null;
+}) {
+  if (version.user_id === null) return null;
+  return {
+    id: version.user_id,
+    name: version.name ?? 'Unknown',
+    email: version.email ?? '',
+    color: version.color ?? '#8e8e93',
+  };
+}
+
 export function createApp(db: Db) {
   const app = new Hono<AppEnv>();
 
@@ -412,16 +427,35 @@ export function createApp(db: Db) {
         id: version.id,
         createdAt: version.created_at,
         excerpt: version.excerpt,
-        author:
-          version.user_id === null
-            ? null
-            : {
-                id: version.user_id,
-                name: version.name ?? 'Unknown',
-                email: version.email ?? '',
-                color: version.color ?? '#8e8e93',
-              },
+        author: toVersionAuthor(version),
       })),
+    });
+  });
+
+  // The full snapshot, so the client can diff it against the current document.
+  app.get('/api/documents/:id/versions/:versionId', async (c) => {
+    const user = currentUser(c);
+    if (!user) return c.json(errorBody('Sign in to continue.', 'unauthenticated'), 401);
+
+    const access = await accessFor(c.req.param('id'), user);
+    if (!access.ok) return c.json(errorBody(access.message, access.code), access.status);
+
+    const versionId = Number(c.req.param('versionId'));
+    if (!Number.isInteger(versionId)) {
+      return c.json(errorBody('Invalid version id.', 'invalid_version'), 400);
+    }
+
+    const version = await repo.getVersion(db, access.doc.id, versionId);
+    if (!version) return c.json(errorBody('That version no longer exists.', 'not_found'), 404);
+
+    return c.json({
+      version: {
+        id: version.id,
+        createdAt: version.created_at,
+        excerpt: version.excerpt,
+        content: version.content,
+        author: toVersionAuthor(version),
+      },
     });
   });
 

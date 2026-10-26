@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "node scripts/dev.mjs",
     "dev:api": "node src/server/local.ts",
+    "serve": "node --experimental-strip-types src/server/standalone.ts",
     "build": "node scripts/publish-video.mjs && vite build",
     "deploy": "npm run build && wrangler deploy",
     "preview": "npm run build && wrangler dev --port 8788",
@@ -17,8 +18,7 @@
     "db:migrate:remote": "wrangler d1 migrations apply ajaia --remote",
     "video:prepare": "node scripts/narrate.mjs --prepare",
     "video:record": "node scripts/walkthrough.mjs",
-    "video:narrate": "node scripts/narrate.mjs",
-    "package": "node scripts/package-submission.mjs"
+    "video:narrate": "node scripts/narrate.mjs"
   },
   "dependencies": {
     "@phosphor-icons/react": "^2.1.10",
@@ -26,6 +26,7 @@
     "@tiptap/pm": "^3.32.0",
     "@tiptap/react": "^3.32.0",
     "@tiptap/starter-kit": "^3.32.0",
+    "diff": "^9.0.0",
     "dompurify": "^3.4.17",
     "hono": "^4.13.14",
     "mammoth": "^1.11.0",

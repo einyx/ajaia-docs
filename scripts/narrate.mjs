@@ -10,6 +10,7 @@
  * re-recorded without a key or a network call.
  */
 import { readFileSync, writeFileSync, mkdirSync, rmSync, cpSync, existsSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
@@ -38,11 +39,18 @@ if (!ffmpeg) {
 }
 
 const prepare = process.argv.includes('--prepare');
-if (prepare) rmSync(clipsDir, { recursive: true, force: true });
 mkdirSync(clipsDir, { recursive: true });
+
 // 1. Synthesise one clip per beat (requests run concurrently).
 const durations = {};
 const CONCURRENCY = 6;
+
+// Regenerate a clip only when it is missing or its text/model/voice changed.
+const hashPath = resolve(artifacts, 'narration-clips.json');
+const hashes = existsSync(hashPath) ? JSON.parse(readFileSync(hashPath, 'utf8')) : {};
+const hashOf = (beat) =>
+  createHash('sha1').update(`${beat.text}|${model}|${voice}|${instructions}`).digest('hex');
+const nextHashes = {};
 
 async function synthesise(beat) {
   const clipPath = resolve(clipsDir, `${beat.id}.mp3`);
@@ -87,11 +95,17 @@ async function synthesise(beat) {
 
 for (let index = 0; index < BEATS.length; index += CONCURRENCY) {
   const batch = BEATS.slice(index, index + CONCURRENCY);
-  // `--prepare` refreshes every clip; the mix pass reuses what is already there.
   await Promise.all(
-    batch.map((beat) => (prepare || !existsSync(resolve(clipsDir, `${beat.id}.mp3`)) ? synthesise(beat) : null)),
+    batch.map((beat) => {
+      const clipPath = resolve(clipsDir, `${beat.id}.mp3`);
+      const hash = hashOf(beat);
+      nextHashes[beat.id] = hash;
+      const stale = !existsSync(clipPath) || hashes[beat.id] !== hash;
+      return stale ? synthesise(beat) : null;
+    }),
   );
 }
+writeFileSync(hashPath, JSON.stringify(nextHashes, null, 2));
 
 // Clip durations let the recorder pace the screen capture to the voice-over.
 for (const beat of BEATS) {

@@ -206,42 +206,52 @@ body {
 
 /* --------------------------------------------------------- liquid glass -- */
 
-.glass {
-  position: relative;
-  background: var(--glass-tint);
-  backdrop-filter: blur(24px) saturate(180%);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
-  border: 1px solid var(--glass-edge);
-  box-shadow: var(--glass-shadow);
-}
+/* Component classes, so they live in Tailwind's components layer: utilities
+   (`fixed`, `absolute`, `bg-*`) have to be able to override them. Unlayered CSS
+   beats layered utilities in Tailwind v4, which silently turned `glass fixed`
+   into `glass relative` — the toast became a flex item and the menus reflowed
+   the toolbar instead of floating. */
+@layer components {
+  .glass {
+    position: relative;
+    background: var(--glass-tint);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    border: 1px solid var(--glass-edge);
+    box-shadow: var(--glass-shadow);
+  }
 
-.glass-thin {
-  background: color-mix(in srgb, var(--glass-tint) 72%, transparent);
-  backdrop-filter: blur(18px) saturate(180%);
-  -webkit-backdrop-filter: blur(18px) saturate(180%);
-}
-
-@media (prefers-reduced-transparency: reduce) {
-  .glass,
   .glass-thin {
-    background: var(--bg-primary);
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
-    border-color: var(--separator);
+    background: color-mix(in srgb, var(--glass-tint) 72%, transparent);
+    backdrop-filter: blur(18px) saturate(180%);
+    -webkit-backdrop-filter: blur(18px) saturate(180%);
+  }
+
+  @media (prefers-reduced-transparency: reduce) {
+    .glass,
+    .glass-thin {
+      background: var(--bg-primary);
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+      border-color: var(--separator);
+    }
+  }
+
+  @media (prefers-contrast: more) {
+    .glass,
+    .glass-thin {
+      background: var(--bg-primary);
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+    }
   }
 }
 
+/* Token overrides stay outside the layer so they keep beating Tailwind's theme. */
 @media (prefers-contrast: more) {
   :root {
     --separator: rgba(60, 60, 67, 0.55);
     --label-secondary: rgba(60, 60, 67, 0.75);
-  }
-
-  .glass,
-  .glass-thin {
-    background: var(--bg-primary);
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
   }
 }
 

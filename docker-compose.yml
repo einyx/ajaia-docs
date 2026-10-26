@@ -1,0 +1,15 @@
+# Portable path: the same app on Node with a local SQLite file.
+# The primary deployment is Cloudflare Workers + D1 (npm run deploy).
+services:
+  app:
+    build: .
+    ports:
+      - "8787:8787"
+    environment:
+      PORT: "8787"
+      AJAIA_DB: /data/ajaia.db
+    volumes:
+      - ajaia-data:/data
+
+volumes:
+  ajaia-data:

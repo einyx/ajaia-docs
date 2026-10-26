@@ -1,0 +1,8 @@
+node_modules
+dist
+.wrangler
+data
+artifacts
+submission
+.git
+*.zip

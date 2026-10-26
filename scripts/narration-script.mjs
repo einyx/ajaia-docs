@@ -45,6 +45,11 @@ export const BEATS = [
     text: 'Lists, quotes and code blocks are one click away, and every change is persisted immediately, so nothing is ever lost to a refresh.',
   },
   {
+    id: 'history',
+    caption: 'Version history: every edit is snapshotted, restore in one click',
+    text: 'One stretch goal made it in. Each edit is snapshotted, so the document keeps a short history showing what changed, when, and who changed it. Restoring a version is one click, and only the owner or an editor can do it.',
+  },
+  {
     id: 'new-doc',
     caption: 'Create a document, rename it inline, and watch autosave do the rest',
     text: 'Creating a document takes one click, renaming is inline, and the save state is always visible. Small details like these are what separate a tool that feels finished from one that merely works.',

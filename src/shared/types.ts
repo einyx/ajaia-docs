@@ -36,6 +36,10 @@ export interface VersionEntry {
   author: PublicUser | null;
 }
 
+export interface VersionDetail extends VersionEntry {
+  content: string;
+}
+
 export interface DocumentsResponse {
   owned: DocumentSummary[];
   shared: DocumentSummary[];
