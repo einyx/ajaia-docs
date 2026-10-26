@@ -39,18 +39,32 @@ Sign in from the login screen (no password needed) or POST `{"email":"…"}` to 
 ### Tests
 
 ```bash
-npm test          # vitest — 8 tests over the API surface
+npm test          # vitest — 22 tests over the API surface and the save queue
 npm run typecheck # tsc --noEmit
 ```
 
 The tests cover the parts that carry the product's risk: authentication, document persistence,
-the sharing matrix (owner / editor / viewer), and request validation.
+the sharing matrix (owner / editor / viewer), request validation, version history, and the
+per-document save queue that retries a failed save against the right document.
+
+### Walkthrough video
+
+The video in `docs/walkthrough.mp4` is generated, not hand-recorded:
+
+```bash
+OPENAI_API_KEY=sk-... node scripts/narrate.mjs --prepare  # synthesise the voice-over
+node scripts/walkthrough.mjs                              # record the app, paced to the audio
+OPENAI_API_KEY=sk-... node scripts/narrate.mjs            # mix narration onto the capture
+```
+
+`scripts/narration-script.mjs` holds the script; the on-screen captions and the voice-over
+come from the same source, so they cannot drift apart.
 
 ### Deploying
 
 ```bash
 npx wrangler login                    # once, in a terminal
-npm run db:migrate:remote             # apply migrations/0001_init.sql to D1
+npm run db:migrate:remote             # apply migrations/ to D1
 npm run deploy                        # vite build + wrangler deploy
 ```
 
@@ -69,6 +83,17 @@ and `database_id` (create the database with `npx wrangler d1 create ajaia`).
   hidden, and shown as `Saving… / Saved / Save failed` in the header. Content is stored as
   semantic HTML, so formatting survives a reload.
 - Search across titles, Markdown/plain-text export from the `⋯` menu.
+
+### Version history
+- Every meaningful edit is **snapshotted**; the `⋯` menu → *Version history* opens a panel
+  listing each snapshot with its author, age and a preview of the text.
+- **Restore** puts an earlier snapshot back. The restore is written to the document and
+  recorded as a new version, so the history never loses the state you came from.
+- Autosave fires often, so snapshots inside a **15-second window collapse into one** — the
+  history shows checkpoints rather than keystrokes. The newest 30 snapshots are kept.
+- Reading the history is allowed for anyone with access; **restoring requires owner or
+  editor** — a viewer sees the list without a restore button, and the API answers
+  `403 read_only` if one tries anyway.
 
 ### File import
 Import turns a file into a **new editable document** (it does not attach to an existing one):
@@ -111,6 +136,8 @@ All routes are under `/api` and return JSON. Errors are `{ "error": { "message",
 | `GET` | `/api/documents/:id/shares` | Owner + shared users |
 | `POST` | `/api/documents/:id/shares` | `{email, role}` — owner only |
 | `DELETE` | `/api/documents/:id/shares/:userId` | Owner only |
+| `GET` | `/api/documents/:id/versions` | Snapshots, newest first (read: owner / editor / viewer) |
+| `POST` | `/api/documents/:id/versions/:versionId/restore` | Restore a snapshot — owner / editor only |
 
 Validation is explicit: emails must look like emails, roles must be `editor` or `viewer`,
 titles are trimmed and capped at 200 characters, document content is capped at 1 MB
@@ -125,9 +152,12 @@ users(id, email, name, color, created_at)
 sessions(token, user_id, created_at)
 documents(id, owner_id, title, content, plain_text, created_at, updated_at)
 document_shares(document_id, user_id, role, created_at)   -- role: editor | viewer
+document_versions(id, document_id, user_id, content, excerpt, created_at)
 ```
 
-Schema: [`migrations/0001_init.sql`](migrations/0001_init.sql).
+Schema: [`migrations/0001_init.sql`](migrations/0001_init.sql) plus
+[`migrations/0003_document_versions.sql`](migrations/0003_document_versions.sql). Local dev and
+the test suite read every migration in `migrations/` in order, so they cannot drift from D1.
 
 ---
 

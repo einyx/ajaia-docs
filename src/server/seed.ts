@@ -14,6 +14,7 @@ Google Docs surface, built end to end — editor, persistence, sharing and deplo
   <li><strong>Autosave</strong> — every keystroke is persisted, so a refresh never loses work.</li>
   <li><strong>File import</strong> from <code>.md</code>, <code>.txt</code> and <code>.docx</code>.</li>
   <li><strong>Sharing</strong> with an owner, an editor and a viewer role.</li>
+  <li><strong>Version history</strong> — snapshots you can restore, from the <em>⋯</em> menu.</li>
 </ul>
 <h2>Try the sharing flow</h2>
 <p>Open <em>Share</em> and grant <strong>maya@ajaia.dev</strong> access, then sign in as Maya
@@ -32,7 +33,7 @@ const NOTES_HTML = `
 <h2>Open questions</h2>
 <ul>
   <li><u>Conflict resolution</u> when two editors type at once.</li>
-  <li>Document version history and a real diff view.</li>
+  <li>A <u>character-level diff</u> between a saved version and the current text.</li>
   <li>PDF export for review packets.</li>
 </ul>
 `;

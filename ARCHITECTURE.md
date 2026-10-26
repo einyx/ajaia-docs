@@ -19,8 +19,9 @@ and went deep on it:
 | Auth | Mocked — seeded accounts, session cookie | Real auth would have consumed the time budget that the editor, sharing and deployment needed. The *authorisation* layer is real. |
 | Deployment | Cloudflare Workers + static assets binding | One deploy, one origin, no CORS, no second service to operate. |
 
-**Explicitly out of scope:** real-time collaboration (CRDT/OT), comments/suggestions, version
-history, PDF export, org-wide sharing, full-text search across bodies, offline editing.
+**Explicitly out of scope:** real-time collaboration (CRDT/OT), comments/suggestions, a
+character-level diff view, PDF export, org-wide sharing, full-text search across bodies,
+offline editing.
 
 ## 2. Shape of the system
 
@@ -37,6 +38,7 @@ history, PDF export, org-wide sharing, full-text search across bodies, offline e
 │  /api/auth/*   session cookie, no passwords (mocked)            │
 │  /api/documents/*  CRUD + role checks                            │
 │  /api/documents/:id/shares/*  grant / change / revoke            │
+│  /api/documents/:id/versions/*  list / restore snapshots        │
 │  storage adapter ──► D1 (SQLite)  |  static assets ──► SPA      │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -53,6 +55,7 @@ users(id, email UNIQUE, name, color, created_at)
 sessions(token PK, user_id → users, created_at)
 documents(id PK, owner_id → users, title, content, plain_text, created_at, updated_at)
 document_shares(document_id → documents, user_id → users, role CHECK(editor|viewer), created_at)
+document_versions(id PK, document_id → documents, user_id → users, content, excerpt, created_at)
 ```
 
 `documents.content` stores **semantic HTML**, not editor JSON. HTML keeps three properties I
@@ -81,6 +84,8 @@ Every route goes through it, and the role then gates the operation:
 | edit content / title | ✅ | ✅ | 403 `read_only` | 403 |
 | grant / change / revoke access | ✅ | 403 | 403 | 403 |
 | delete document | ✅ | 403 | 403 | 403 |
+| read version history | ✅ | ✅ | ✅ | 403 |
+| restore a version | ✅ | ✅ | 403 `read_only` | 403 |
 
 The UI mirrors the rules (toolbar disabled, read-only banner, owner-only affordances), but the
 UI is never the enforcement point. The vitest suite asserts the whole matrix, including that a
@@ -96,6 +101,17 @@ viewer gets `403 read_only` rather than a silent success.
 - **Optimistic concurrency was deliberately skipped.** Last-write-wins is acceptable for a
   demo; adding version checks without real-time sync would have added half a feature.
   It is the first thing I would add (see §8).
+- **Version history**: the API snapshots the content whenever a `PATCH` changes it, and the
+  `⋯` menu → *Version history* lists those snapshots (author, age, text preview) with a
+  **Restore** action. Two details make it usable rather than noisy:
+  - *Autosave fires often*, so snapshots inside a 15-second window collapse into one — the
+    history shows checkpoints, not keystrokes. The newest 30 are kept; older ones are pruned.
+  - *A restore is itself a version.* Restoring writes the snapshot back to the document and
+    records it as a new snapshot, so the history always shows how the document got to where
+    it is now.
+
+  The snapshot rule lives on the server, so it holds for every client — and the panel is
+  read-only for viewers, because restoring is a write.
 
 ## 6. Design system
 
@@ -118,7 +134,7 @@ Apple's Human Interface Guidelines, implemented as CSS custom properties in
 | Check | Command / method | Result |
 | --- | --- | --- |
 | Types | `npm run typecheck` | clean |
-| Behaviour | `npm test` (vitest) | 8/8 — auth, persistence, role matrix, validation |
+| Behaviour | `npm test` (vitest) | 22/22 — auth, persistence, role matrix, validation, version history |
 | API, live | `curl` against the deployed Worker | login → list → patch → share → forbidden paths |
 | UI, live | Playwright run of the real flow | sign-in → edit → autosave → import → share → switch user |
 | Persistence | reload the page mid-flow | content returns from D1 |
@@ -130,7 +146,9 @@ Apple's Human Interface Guidelines, implemented as CSS custom properties in
 rate limiting, no audit trail); last-write-wins editing (two people typing in the same document
 can overwrite each other); import capped at 1 MB and limited to `.md` / `.txt` / `.docx`;
 no attachment support; `.docx` import is best-effort (mammoth drops exotic Word features);
-the share picker lists seeded accounts only, not a directory.
+the share picker lists seeded accounts only, not a directory; version history stores full
+snapshots, so a large document with many versions costs real storage, and there is no
+character-level diff — only a text preview of each snapshot.
 
 **Next 2–4 hours, in order:**
 
@@ -139,8 +157,8 @@ the share picker lists seeded accounts only, not a directory.
    (Workers Durable Objects or a simple SSE endpoint) showing who is in the document.
 2. **Real auth.** Passwordless e-mail or OIDC, `SameSite=Strict` + CSRF token, per-user rate
    limiting, and an `audit_log` table recording share grants and revocations.
-3. **Version history.** Snapshot the content on every save (or every N saves) and expose a
-   diff/restore view — the schema change is small, the UI is the work.
+3. **Version history, second half.** A character-level diff between a snapshot and the current
+   text, and named versions ("Q3 draft") on top of the automatic ones.
 4. **Attachments.** R2 bucket + presigned uploads, attachments panel in the document header.
 5. **Export to PDF** via the browser print stylesheet, and Markdown export polish
    (nested lists, tables).
@@ -150,8 +168,12 @@ the share picker lists seeded accounts only, not a directory.
 - **HTML over editor JSON** — durability over purity; costs a little storage, saves a migration.
 - **Mocked auth** — spends the budget on the part reviewers can evaluate (sharing rules) and
   documents exactly what would be needed for real auth.
-- **D1 over Postgres** — the data model is four small tables with no joins that need a real
+- **D1 over Postgres** — the data model is five small tables with no joins that need a real
   planner; D1 removes an entire class of deployment work. The `Db` interface keeps the door open.
+- **Snapshots over diffs** — a version stores the whole content instead of a patch. Storage is
+  worse and the restore is simpler, but a diff format needs a base version, a merge rule and a
+  diff library; a snapshot needs none of those, and it cannot drift out of sync with the
+  document it came from.
 - **Import over attachment** — the first import proves the file pipeline, the editor and
   persistence at once; attachments are additive later.
 - **Client-side parsing** — keeps the Worker free of file-parsing dependencies and gives
