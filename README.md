@@ -95,11 +95,17 @@ that does not exist. `deploy/k8s/README.md` explains when a chart would start to
 - **Autosave** — edits are persisted 700 ms after you stop typing, flushed when the tab is
   hidden, and shown as `Saving… / Saved / Save failed` in the header. Content is stored as
   semantic HTML, so formatting survives a reload.
-- Search across titles, Markdown/plain-text export from the `⋯` menu.
+- Search across titles, Markdown/plain-text export from the `⋯` menu, and **export as PDF** —
+  the browser's own print pipeline over a print stylesheet, so the PDF keeps selectable text
+  and real pagination.
 
 ### Version history
 - Every meaningful edit is **snapshotted**; the `⋯` menu → *Version history* opens a panel
   listing each snapshot with its author, age and a preview of the text.
+- **Changes** diffs a snapshot against the document as it is now, word by word: what was
+  removed is struck through, what was added is highlighted, and the panel counts the
+  characters in each direction. The diff is computed in the browser, so a large document
+  cannot slow the API down.
 - **Restore** puts an earlier snapshot back. The restore is written to the document and
   recorded as a new version, so the history never loses the state you came from.
 - Autosave fires often, so snapshots inside a **15-second window collapse into one** — the
@@ -150,6 +156,7 @@ All routes are under `/api` and return JSON. Errors are `{ "error": { "message",
 | `POST` | `/api/documents/:id/shares` | `{email, role}` — owner only |
 | `DELETE` | `/api/documents/:id/shares/:userId` | Owner only |
 | `GET` | `/api/documents/:id/versions` | Snapshots, newest first (read: owner / editor / viewer) |
+| `GET` | `/api/documents/:id/versions/:versionId` | One snapshot, with its content |
 | `POST` | `/api/documents/:id/versions/:versionId/restore` | Restore a snapshot — owner / editor only |
 
 Validation is explicit: emails must look like emails, roles must be `editor` or `viewer`,

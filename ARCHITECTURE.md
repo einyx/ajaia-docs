@@ -20,7 +20,7 @@ and went deep on it:
 | Deployment | Cloudflare Workers + static assets binding | One deploy, one origin, no CORS, no second service to operate. |
 
 **Explicitly out of scope:** real-time collaboration (CRDT/OT), comments/suggestions, a
-character-level diff view, PDF export, org-wide sharing, full-text search across bodies,
+character-level diff view, org-wide sharing, full-text search across bodies,
 offline editing.
 
 ## 2. Shape of the system
@@ -160,6 +160,29 @@ viewer gets `403 read_only` rather than a silent success.
 
   The snapshot rule lives on the server, so it holds for every client — and the panel is
   read-only for viewers, because restoring is a write.
+- **The diff runs in the browser.** The API serves one snapshot's content on request; the
+  client turns both documents into plain text (one line per block) and diffs them with
+  [`diff`](https://www.npmjs.com/package/diff) at word granularity. Doing it client-side
+  keeps the Worker free of a quadratic computation — the free Workers plan allows 10 ms of
+  CPU per request, and diffing two very different large documents blows straight through
+  that. The diff is given a 1.5 s deadline; if it gives up, the panel says that everything
+  changed rather than freezing the tab.
+
+- **Export to PDF** — the `⋯` menu runs the browser's own print pipeline over a print
+  stylesheet (`@media print` in `src/client/styles.css`): the app chrome disappears, the
+  document is laid out on white paper with real pagination, and the user picks *Save as PDF*
+  in the native dialog. No PDF library and no server round trip — the browser is already a
+  PDF renderer, so the output keeps selectable text and working links. Three details the
+  stylesheet has to get right:
+  - the light palette is forced, because a dark-mode browser would otherwise print white
+    text on white paper;
+  - the editor's scroll container is un-clipped, or the PDF would contain one screenful;
+  - the title is printed as a heading only when the body does not already open with it, so
+    it never appears twice.
+
+  The export is named after the document (`document.title` is swapped for the print call),
+  and everyone with access can run it — reading is enough, and it matches the Markdown and
+  plain-text exports.
 
 ## 6. Design system
 
@@ -185,6 +208,7 @@ Apple's Human Interface Guidelines, implemented as CSS custom properties in
 | Behaviour | `npm test` (vitest) | 22/22 — auth, persistence, role matrix, validation, version history |
 | API, live | `curl` against the deployed Worker | login → create → patch → read-back → share (editor + viewer) → editor writes but cannot delete or re-share → viewer gets `403 read_only` → owner-only revoke → versions list + restore → `413` over 1 MB |
 | UI, live | Playwright run of the real flow | sign-in → edit → autosave → import → share → switch user |
+| PDF export | `npm run verify:pdf` (Playwright + `pdftotext`) | menu item opens the print pipeline → chrome hidden in print media → body prints black in light *and* dark mode → the produced PDF contains the document text and no toolbar |
 | Persistence | reload the page mid-flow | content returns from D1 |
 | Design | screenshots reviewed at 1440×900, light and dark | — |
 
@@ -195,8 +219,8 @@ rate limiting, no audit trail); last-write-wins editing (two people typing in th
 can overwrite each other); import capped at 1 MB and limited to `.md` / `.txt` / `.docx`;
 no attachment support; `.docx` import is best-effort (mammoth drops exotic Word features);
 the share picker lists seeded accounts only, not a directory; version history stores full
-snapshots, so a large document with many versions costs real storage, and there is no
-character-level diff — only a text preview of each snapshot.
+snapshots, so a large document with many versions costs real storage, and the diff is
+word-level rather than character-level.
 
 **Next 2–4 hours, in order:**
 
@@ -205,11 +229,11 @@ character-level diff — only a text preview of each snapshot.
    (Workers Durable Objects or a simple SSE endpoint) showing who is in the document.
 2. **Real auth.** Passwordless e-mail or OIDC, `SameSite=Strict` + CSRF token, per-user rate
    limiting, and an `audit_log` table recording share grants and revocations.
-3. **Version history, second half.** A character-level diff between a snapshot and the current
-   text, and named versions ("Q3 draft") on top of the automatic ones.
+3. **Version history, second half.** Named versions ("Q3 draft") on top of the automatic
+   ones, and a side-by-side view instead of the inline diff.
 4. **Attachments.** R2 bucket + presigned uploads, attachments panel in the document header.
-5. **Export to PDF** via the browser print stylesheet, and Markdown export polish
-   (nested lists, tables).
+5. **Markdown export polish** (nested lists, tables), and a PDF export that offers more than
+   the print dialog — page numbers, a cover page, a choice of paper size.
 
 ## 9. Trade-offs I would defend
 

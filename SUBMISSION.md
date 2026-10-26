@@ -71,8 +71,9 @@ ajaia/
 7. **Import file** → drop in a `.md`, `.txt` or `.docx` file → it opens as a new editable
    document.
 8. **Version history** → `⋯` → *Version history* → the snapshots of the document, with their
-   author, age and a text preview. *Restore* puts an earlier one back (a viewer sees the list
-   but no restore button, and the API answers `403 read_only` if one tries anyway).
+   author, age and a text preview. *Changes* diffs a snapshot against the current text word
+   by word; *Restore* puts an earlier one back (a viewer sees the list but no restore
+   button, and the API answers `403 read_only` if one tries anyway).
 
 Accounts (mocked auth, no passwords): `alessio@linux.com`, `maya@ajaia.dev`, `sam@ajaia.dev`.
 
@@ -90,8 +91,10 @@ Accounts (mocked auth, no passwords): `alessio@linux.com`, `maya@ajaia.dev`, `sa
   every route, role badges in the UI.
 - Version history: content snapshots taken by the server on every meaningful edit (collapsed
   into one per 15-second window, newest 30 kept), listed with author and age, with a
-  permission-checked restore.
-- Markdown and plain-text export; dark mode; keyboard-accessible dialogs and menus;
+  word-level diff against the current document and a permission-checked restore.
+- Markdown and plain-text export, plus **PDF export** through the browser's print stylesheet
+  (print chrome removed, document on white paper, real pagination, selectable text);
+  dark mode; keyboard-accessible dialogs and menus;
   Apple HIG visual language (semantic colours, Apple text styles, Liquid Glass navigation
   layer, 44 pt touch targets, reduced-transparency/motion/contrast fallbacks).
 
@@ -100,8 +103,8 @@ Accounts (mocked auth, no passwords): `alessio@linux.com`, `maya@ajaia.dev`, `sa
   rate limiting, no audit log. The *authorisation* layer is real.
 - No real-time collaboration: last-write-wins, so two simultaneous editors can overwrite each
   other. No presence indicators.
-- No comments, no attachments, no PDF export, and version history has no character-level diff
-  (only a text preview of each snapshot).
+- No comments, no attachments, no PDF export; version history has no named versions and its
+  diff is word-level rather than character-level.
 - Import is limited to `.md`, `.txt` and `.docx`; `.docx` conversion is best-effort.
 - The share picker lists seeded accounts rather than a directory of real users.
 
@@ -109,10 +112,10 @@ Accounts (mocked auth, no passwords): `alessio@linux.com`, `maya@ajaia.dev`, `sa
 1. Optimistic concurrency + presence: a `version` column with conflict rejection and a
    "someone else edited this" banner; presence over Durable Objects or SSE.
 2. Real auth: passwordless e-mail or OIDC, `SameSite=Strict` + CSRF, rate limiting, audit log.
-3. Version history, second half: a character-level diff against the current text, and named
-   versions on top of the automatic ones.
+3. Version history, second half: named versions on top of the automatic ones, and a
+   side-by-side view instead of the inline diff.
 4. Attachments via R2 with presigned uploads.
-5. PDF export through the print stylesheet.
+5. Markdown export polish (nested lists, tables).
 
 ## 5. Deployment and source hosting
 
