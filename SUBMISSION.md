@@ -62,7 +62,9 @@ ajaia/
 ## 3. How to review in 5 minutes
 
 1. Open the live URL. You land on the sign-in screen — **no password needed**.
-2. Sign in as **alessio@linux.com** (owner). You get two seeded documents.
+2. Sign in as **alessio@linux.com** (owner). You get the two seeded documents, plus the two the
+   walkthrough creates (*Launch checklist* and the imported *Imported Brief*) — the same state the
+   video shows.
 3. Click into the text and type: bold/italic/underline work, the header shows `Saving…` then
    `Saved`, and a refresh brings the content back (it lives in Cloudflare D1).
 4. Click **Share** → invite `maya@ajaia.dev` as *Can edit*.
