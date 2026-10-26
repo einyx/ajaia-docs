@@ -227,6 +227,18 @@ body {
     -webkit-backdrop-filter: blur(18px) saturate(180%);
   }
 
+  /* Surfaces that float over the document canvas — menus, the version-history
+     sheet, the share sheet — get an opaque background. The glass blur cannot
+     reach them (their backdrop root is the toolbar's glass), so the content
+     behind stays sharp and bleeds through a translucent panel. Text behind a
+     menu must never be readable through it. */
+  .solid-surface {
+    position: relative;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--separator);
+    box-shadow: var(--glass-shadow);
+  }
+
   @media (prefers-reduced-transparency: reduce) {
     .glass,
     .glass-thin {
@@ -443,4 +455,110 @@ body {
 
 .dialog-enter {
   animation: dialog-enter 180ms cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+/* --------------------------------------------------------------- print -- */
+/* "Export as PDF" runs the browser's own print pipeline over this stylesheet:
+   the app chrome disappears and the document is laid out on paper with real
+   pagination. Unlayered rules beat Tailwind's layered utilities, so the print
+   block can override the screen styles without !important. */
+
+/* Content that only exists in the PDF — the document title, which lives in a
+   header input that never prints. */
+.print-only {
+  display: none;
+}
+
+@page {
+  margin: 18mm;
+}
+
+@media print {
+  /* A dark-mode browser would print white text on white paper. This block
+     comes last, so it wins over the prefers-color-scheme overrides above. */
+  :root {
+    color-scheme: light;
+    --label-primary: #000000;
+    --label-secondary: rgba(60, 60, 67, 0.75);
+    --bg-primary: #ffffff;
+    --accent: #0062cc;
+    --separator: rgba(60, 60, 67, 0.4);
+    --fill-tertiary: transparent;
+  }
+
+  /* The sidebar, the toolbar, the menus, the sheets and the toast are glass
+     or fixed; the document canvas is neither, so it survives. */
+  .glass,
+  .fixed,
+  .screen-only {
+    display: none;
+  }
+
+  html,
+  body,
+  #root {
+    height: auto;
+    overflow: visible;
+  }
+
+  .app-canvas {
+    background: none;
+  }
+
+  /* The editor scrolls inside a fixed-height column; printing it as-is would
+     clip the document to one screenful. */
+  .thin-scrollbar {
+    overflow: visible;
+    padding: 0;
+  }
+
+  .page-canvas {
+    background: none;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    max-width: none;
+    min-height: 0;
+    padding: 0;
+  }
+
+  .ProseMirror {
+    min-height: 0;
+  }
+
+  /* Backgrounds are dropped when printing, so the inverted code block would
+     come out white on white. */
+  .ProseMirror code {
+    background: transparent;
+  }
+
+  .ProseMirror pre {
+    background: none;
+    border: 1px solid var(--separator);
+    color: var(--label-primary);
+    white-space: pre-wrap;
+  }
+
+  /* A heading never dangles at the bottom of a page, and a block is not split
+     across pages. */
+  .ProseMirror h1,
+  .ProseMirror h2,
+  .ProseMirror h3 {
+    break-after: avoid-page;
+  }
+
+  .ProseMirror pre,
+  .ProseMirror blockquote,
+  .ProseMirror li {
+    break-inside: avoid;
+  }
+
+  .print-only {
+    display: block;
+    margin-bottom: 1.5rem;
+    font-size: 28px;
+    line-height: 34px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
 }

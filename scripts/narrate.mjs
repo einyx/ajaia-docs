@@ -139,11 +139,20 @@ if (!existsSync(videoPath)) {
   process.exit(1);
 }
 
+// Never let two clips overlap: if the capture drifted, push the later clip
+// past the previous one, and keep a limiter in the chain so the sum cannot clip.
+let previousEnd = 0;
+const schedule = timeline.map((entry) => {
+  const start = Math.max(entry.startMs, previousEnd + 250);
+  previousEnd = start + (durations[entry.id] ?? 0);
+  return start;
+});
+
 const delays = timeline
-  .map((entry, index) => `[${index + 1}:a]adelay=${entry.startMs}|${entry.startMs}[a${index}]`)
+  .map((entry, index) => `[${index + 1}:a]adelay=${schedule[index]}|${schedule[index]}[a${index}]`)
   .join(';');
 const mix = timeline.map((_, index) => `[a${index}]`).join('');
-const filter = `${delays};${mix}amix=inputs=${timeline.length}:normalize=0[mixout]`;
+const filter = `${delays};${mix}amix=inputs=${timeline.length}:normalize=0,alimiter=limit=0.95[mixout]`;
 
 // The narrated cut is the deliverable: public/ is what Vite ships, so the
 // live URL serves exactly this file.

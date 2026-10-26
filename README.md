@@ -39,7 +39,7 @@ Sign in from the login screen (no password needed) or POST `{"email":"…"}` to 
 ### Tests
 
 ```bash
-npm test          # vitest — 22 tests over the API surface and the save queue
+npm test          # vitest — 31 tests: API surface, save queue, diff
 npm run typecheck # tsc --noEmit
 ```
 

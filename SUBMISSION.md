@@ -45,13 +45,16 @@ ajaia/
 ├── walkthrough-video-url.txt  the video link on its own
 ├── docs/
 │   ├── walkthrough.mp4        narrated walkthrough (also served by the live app)
+│   ├── architecture.svg|png   rendered system + authorisation diagrams
 │   └── screens/               screenshots, light + dark
 ├── src/client/                React SPA: editor, sidebar, share sheet, version history, login
-├── src/server/                Hono API, storage adapter, SQL repository, seeding
+├── src/server/                Hono API, storage adapter, SQL repository, seeding, standalone server
 ├── src/shared/                types and constants shared by client and server
 ├── migrations/                D1 / SQLite schema (0001 init, 0003 version history)
-├── scripts/                   dev runner, walkthrough recorder, narration, packaging
-├── tests/api.test.ts          vitest suite over the API (17 tests)
+├── scripts/                   dev runner, walkthrough recorder, narration, packaging, diagram renderer
+├── tests/                     vitest suites: API (18), save queue (5), diff (8) — 31 tests
+├── deploy/k8s/                optional Kubernetes manifests (the container path)
+├── Dockerfile                 portable path: one Node process serving the SPA and the API
 ├── wrangler.jsonc             Worker + D1 + assets configuration
 └── package.json
 ```
@@ -130,7 +133,7 @@ Accounts (mocked auth, no passwords): `alessio@linux.com`, `maya@ajaia.dev`, `sa
 ## 6. Verification summary
 
 - `npm run typecheck` → clean.
-- `npm test` → 22/22 (auth, persistence, role matrix, validation, version history) against the real app + SQL.
+- `npm test` → 31/31 (auth, persistence, role matrix, validation, version history, save queue, diff) against the real app + SQL.
 - Live API checks against the deployed Worker (login, list, patch, share, forbidden paths).
 - Playwright end-to-end run of the full flow against the live URL; reload-persistence proof.
 - Screenshots reviewed by hand in both appearances — that is how a viewer-mode save bug was

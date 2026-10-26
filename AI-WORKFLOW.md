@@ -62,7 +62,7 @@ happened. That is the kind of defect that a green test suite does not catch.
 
 **Correctness**
 - `npm run typecheck` — clean (strict TypeScript, no `any` escape hatches in app code).
-- `npm test` — 8 vitest tests over the real Hono app and the real SQL, against an in-memory
+- `npm test` — 31 vitest tests over the real Hono app and the real SQL, against an in-memory
   database: auth, persistence round-trip, the full role matrix (owner / editor / viewer /
   non-sharee), and request validation.
 - Live API checks with `curl` against the deployed Worker — login, list, patch, share, and the

@@ -176,7 +176,7 @@ export function ShareDialog({ doc, onClose }: ShareDialogProps) {
         role="dialog"
         aria-modal="true"
         aria-label={`Share ${doc.title}`}
-        className="glass dialog-enter w-full max-w-lg overflow-hidden rounded-panel"
+        className="solid-surface dialog-enter w-full max-w-lg overflow-hidden rounded-panel"
         onClick={(event) => event.stopPropagation()}
       >
         <div className="flex items-start gap-3 px-5 pb-3 pt-4">

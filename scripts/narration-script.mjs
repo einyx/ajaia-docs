@@ -91,8 +91,8 @@ export const BEATS = [
   },
   {
     id: 'export',
-    caption: 'Export as Markdown or plain text from the document menu',
-    text: 'Export is in this menu. The features I chose not to build, attachments, version history and PDF export, are listed in the architecture note along with the order I would build them in.',
+    caption: 'Export as PDF, Markdown or plain text from the document menu',
+    text: 'Export is in this menu, as PDF through the browser print stylesheet, or as Markdown or plain text. The features I chose not to build, attachments and a character-level diff, are listed in the architecture note along with the order I would build them in.',
   },
   {
     id: 'repo',

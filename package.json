@@ -13,6 +13,7 @@
     "preview": "npm run build && wrangler dev --port 8788",
     "package": "node scripts/package-submission.mjs",
     "test": "vitest run",
+    "verify:pdf": "node scripts/verify-pdf-export.mjs",
     "typecheck": "tsc --noEmit",
     "db:migrate:local": "wrangler d1 migrations apply ajaia --local",
     "db:migrate:remote": "wrangler d1 migrations apply ajaia --remote",

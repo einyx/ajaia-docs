@@ -87,6 +87,13 @@ let beatLength = 0;
 async function speak(page, id) {
   const beat = BEAT_BY_ID.get(id);
   if (!beat) throw new Error(`Unknown beat: ${id}`);
+
+  // Never start a line before the previous one has finished — overlapping
+  // narration sums to clipping, which is audible as crackle.
+  const readyAt = beatStartedAt + beatLength + 400;
+  const remaining = readyAt - Date.now();
+  if (remaining > 0) await page.waitForTimeout(remaining);
+
   await page.evaluate(
     ([style, value]) => {
       let el = document.getElementById('walkthrough-caption');
@@ -257,12 +264,14 @@ await page.waitForTimeout(1800);
 await page.getByText('maya@ajaia.dev').click();
 await page.waitForTimeout(2500);
 await shot('12-shared-with-me');
+await settle(page);
 
 // ------------------------------------------------------------- 13. maya --
 await speak(page, 'maya');
 await page.locator('nav li button', { hasText: 'Imported Brief' }).first().click();
 await wait(page, 2200);
 await shot('13-maya-editing');
+await settle(page);
 
 // ------------------------------------------------------------ 14. viewer --
 await speak(page, 'viewer');
@@ -273,6 +282,7 @@ await page.waitForTimeout(2200);
 await page.locator('nav li button', { hasText: 'Imported Brief' }).first().click();
 await wait(page, 2500);
 await shot('14-viewer-readonly');
+await settle(page);
 
 // ------------------------------------------------------------ 15. design --
 await speak(page, 'design');
@@ -285,6 +295,7 @@ await shot('16-dark-share-dialog');
 await page.getByRole('button', { name: 'Close' }).click();
 await page.emulateMedia({ colorScheme: 'light' });
 await wait(page, 1200);
+await settle(page);
 
 // ------------------------------------------------------------ 16. export --
 await speak(page, 'export');
@@ -293,7 +304,6 @@ await wait(page, 2000);
 await shot('17-export-menu');
 await page.getByRole('menuitem', { name: 'Export as Markdown' }).click();
 await settle(page, 400);
-
 // ------------------------------------------------------ 17. repo + docs --
 await speak(page, 'repo');
 await page.goto(repo, { waitUntil: 'networkidle' });
@@ -330,6 +340,25 @@ const mp4Path = resolve(videoDir, 'walkthrough.mp4');
 
 writeFileSync(resolve(artifacts, 'narration.json'), JSON.stringify(narration, null, 2));
 console.log(`narration beats: ${narration.length}`);
+
+// Fail loudly if two voice-over lines would overlap in the mix — overlapping
+// narration sums to clipping, which is audible as crackle.
+const clipDurations = JSON.parse(readFileSync(resolve(artifacts, 'narration-durations.json'), 'utf8'));
+let previousEnd = 0;
+let overlap = null;
+for (const entry of narration) {
+  const end = entry.startMs + (clipDurations[entry.id] ?? 0);
+  if (entry.startMs < previousEnd) {
+    overlap = `${entry.id} starts ${((previousEnd - entry.startMs) / 1000).toFixed(2)}s before the previous line ends`;
+    break;
+  }
+  previousEnd = Math.max(previousEnd, end);
+}
+if (overlap) {
+  console.error(`narration overlap: ${overlap}`);
+  process.exit(1);
+}
+console.log('narration timeline is clean (no overlaps)');
 
 const ffmpeg = ['/opt/homebrew/bin/ffmpeg', '/usr/local/bin/ffmpeg'].find((bin) => existsSync(bin));
 if (ffmpeg) {

@@ -12,6 +12,7 @@ import {
   DotsThree,
   DownloadSimple,
   Eraser,
+  FilePdf,
   LinkSimple,
   ListBullets,
   ListNumbers,
@@ -144,6 +145,11 @@ export function EditorPane({
         ? 'Heading 3'
         : 'Body';
 
+  // The title lives in a header input, which never prints, so the PDF gets it
+  // as a heading — unless the body already opens with it.
+  const showPrintedTitle =
+    Boolean(title.trim()) && editor?.getText().split('\n')[0]?.trim() !== title.trim();
+
   function openLinkEditor() {
     setLinkValue(editor?.getAttributes('link').href ?? '');
     setLinkOpen(true);
@@ -169,6 +175,15 @@ export function EditorPane({
   function exportText() {
     if (!editor) return;
     onExport(`${doc.title || 'document'}.txt`, editor.getText(), 'text/plain');
+  }
+
+  function exportPdf() {
+    // The browser names the saved file after the document title; without this
+    // it would save every export as "Ajaia Docs.pdf".
+    const previous = document.title;
+    document.title = title || 'Untitled document';
+    window.print();
+    document.title = previous;
   }
 
   const saveLabel =
@@ -241,6 +256,7 @@ export function EditorPane({
                   onClose={() => setMenuOpen(false)}
                   items={[
                     { id: 'history', label: 'Version history', icon: ClockCounterClockwise, onSelect: onVersionHistory },
+                    { id: 'pdf', label: 'Export as PDF', icon: FilePdf, onSelect: exportPdf },
                     { id: 'md', label: 'Export as Markdown', icon: DownloadSimple, onSelect: exportMarkdown },
                     { id: 'txt', label: 'Export as plain text', icon: DownloadSimple, onSelect: exportText },
                     ...(doc.role === 'owner'
@@ -436,13 +452,14 @@ export function EditorPane({
       </div>
 
       {readOnly ? (
-        <div className="mx-2.5 mt-2.5 rounded-control border border-separator bg-bg-tertiary px-3 py-2 text-subhead text-label-secondary">
+        <div className="screen-only mx-2.5 mt-2.5 rounded-control border border-separator bg-bg-tertiary px-3 py-2 text-subhead text-label-secondary">
           You have view-only access. Ask the owner for edit permission to make changes.
         </div>
       ) : null}
 
       <div className="thin-scrollbar flex-1 overflow-y-auto px-2.5 py-2.5 sm:px-6">
         <div className="page-canvas mx-auto min-h-[70vh] w-full max-w-[720px] px-8 py-12 sm:px-14">
+          {showPrintedTitle ? <h1 className="print-only">{title}</h1> : null}
           <EditorContent editor={editor} />
         </div>
       </div>

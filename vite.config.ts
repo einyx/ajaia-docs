@@ -9,6 +9,11 @@ export default defineConfig({
     emptyOutDir: true,
     target: 'es2022',
   },
+  test: {
+    // Only the repository's own tests — `npm run package` writes a copy of the
+    // suite into submission/, and vitest would otherwise run it twice.
+    include: ['tests/**/*.test.ts'],
+  },
   server: {
     port: 5173,
     proxy: {

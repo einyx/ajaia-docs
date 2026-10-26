@@ -24,11 +24,18 @@ for (const file of ['README.md', 'ARCHITECTURE.md', 'AI-WORKFLOW.md', 'SUBMISSIO
   if (existsSync(path)) cpSync(path, resolve(out, file));
 }
 
-const screens = resolve(root, 'artifacts/screens');
-if (existsSync(screens)) {
+// Screenshots live in docs/ (the reviewed copies); artifacts/ holds the raw run.
+const screens = [resolve(root, 'docs/screens'), resolve(root, 'artifacts/screens')].find((dir) => existsSync(dir));
+if (screens) {
   for (const file of readdirSync(screens)) {
     if (file.endsWith('.png')) cpSync(resolve(screens, file), resolve(out, 'docs/screens', file));
   }
+}
+
+// The rendered architecture diagram belongs next to the screenshots.
+for (const file of ['architecture.svg', 'architecture.png']) {
+  const path = resolve(root, 'docs', file);
+  if (existsSync(path)) cpSync(path, resolve(out, 'docs', file));
 }
 
 if (existsSync(source)) cpSync(source, resolve(out, 'docs/walkthrough.mp4'));
@@ -36,11 +43,22 @@ if (existsSync(source)) cpSync(source, resolve(out, 'docs/walkthrough.mp4'));
 // Source code (no node_modules, no build output, no local database).
 const codeOut = resolve(out, 'source');
 mkdirSync(codeOut, { recursive: true });
-const include = ['src', 'scripts', 'tests', 'migrations', 'public', 'docs'];for (const dir of include) {
+const include = ['src', 'scripts', 'tests', 'migrations', 'public', 'docs', 'deploy'];
+for (const dir of include) {
   const path = resolve(root, dir);
   if (existsSync(path)) cpSync(path, resolve(codeOut, dir), { recursive: true });
 }
-for (const file of ['package.json', 'package-lock.json', 'tsconfig.json', 'vite.config.ts', 'wrangler.jsonc', '.gitignore']) {
+for (const file of [
+  'package.json',
+  'package-lock.json',
+  'tsconfig.json',
+  'vite.config.ts',
+  'wrangler.jsonc',
+  '.gitignore',
+  'Dockerfile',
+  'docker-compose.yml',
+  '.dockerignore',
+]) {
   const path = resolve(root, file);
   if (existsSync(path)) cpSync(path, resolve(codeOut, file));
 }

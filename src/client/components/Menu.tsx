@@ -83,7 +83,7 @@ export function Menu({
       ref={ref}
       role="menu"
       aria-label={label}
-      className={`glass absolute z-30 min-w-48 rounded-card py-1 ${
+      className={`solid-surface absolute z-30 min-w-48 rounded-card py-1 ${
         align === 'right' ? 'right-0' : 'left-0'
       }`}
     >

@@ -154,7 +154,7 @@ export function App() {
 
   async function handleImport(file: File) {
     if (!isSupportedFile(file)) {
-      showToast(`“${file.name}” is not supported. Import a .md, .txt or .docx file.`, 'error');
+      showToast(`“${file.name}” is not supported. Import a .md, .txt or .docx file (max 1 MB).`, 'error');
       return;
     }
 

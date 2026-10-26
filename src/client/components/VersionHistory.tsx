@@ -139,7 +139,7 @@ export function VersionHistory({ doc, onClose, onRestored }: VersionHistoryProps
         role="dialog"
         aria-modal="true"
         aria-label="Version history"
-        className="glass dialog-enter flex h-full w-full max-w-sm flex-col rounded-l-panel"
+        className="solid-surface dialog-enter flex h-full w-full max-w-sm flex-col rounded-l-panel"
         onClick={(event) => event.stopPropagation()}
       >
         <div className="flex items-start gap-3 px-4 pb-2 pt-4">

@@ -205,7 +205,7 @@ Apple's Human Interface Guidelines, implemented as CSS custom properties in
 | Check | Command / method | Result |
 | --- | --- | --- |
 | Types | `npm run typecheck` | clean |
-| Behaviour | `npm test` (vitest) | 22/22 — auth, persistence, role matrix, validation, version history |
+| Behaviour | `npm test` (vitest) | 31/31 — auth, persistence, role matrix, validation, version history, save queue, diff |
 | API, live | `curl` against the deployed Worker | login → create → patch → read-back → share (editor + viewer) → editor writes but cannot delete or re-share → viewer gets `403 read_only` → owner-only revoke → versions list + restore → `413` over 1 MB |
 | UI, live | Playwright run of the real flow | sign-in → edit → autosave → import → share → switch user |
 | PDF export | `npm run verify:pdf` (Playwright + `pdftotext`) | menu item opens the print pipeline → chrome hidden in print media → body prints black in light *and* dark mode → the produced PDF contains the document text and no toolbar |
